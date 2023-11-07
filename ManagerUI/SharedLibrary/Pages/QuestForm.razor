@@ -1,0 +1,407 @@
+﻿@page "/questForm"
+
+@using Microsoft.AspNetCore.Components.Forms
+@using QuestManagerSharedResources.Model
+@using QuestManagerSharedResources.Model.Enums
+@using QuestManagerSharedResources.QuestSubObjects
+@using SharedLibrary.Data.Callback
+@using SharedLibrary.Data.Enum
+@using SharedLibrary.Shared.Components
+@inject NavigationManager NavigationManager
+@inject IQuestDbConnection QuestDbConnection
+
+<div class="container" style="padding-top:20px">
+    <div class="page-header custom-header">
+        <h3>@Title</h3>
+        <button type="button " class="btn btn-link close-button" @onclick=@CloseForm><span class="oi oi-x"></span></button>
+    </div>
+    <div class="form-flex-container">
+        <EditForm EditContext="@EditContext">
+            <div class="flex-item">
+                <div class="container" style="padding-top:20px">
+                    <div class="form-group">
+                        <label for="name" class="form-label">Name</label>
+                        <input id="name" @bind="DialogTargetQuest.Name" class="form-control" style="max-width:240px" type="text" placeholder="Quest Name">
+                    </div>
+                </div>
+                <div class="container" style="padding-top:20px">
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <input @bind="DialogTargetQuest.Description" class="form-control" style="max-width:240px" type="text" placeholder="Quest Description">
+                    </div>
+                </div>
+                <div class="container" style="padding-top:20px">
+                    <div class="form-group">
+                        <label class="form-label">Quest Priority</label>
+                        <InputSelect @bind-Value="@DialogTargetQuest.QuestPriority" class="form-select" style="max-width:240px">
+                            @foreach (var priority in Enum.GetValues(typeof(QuestPriority)))
+                            {
+                                var priorityValue = priority.ToString();
+
+                                if (priorityValue == null)
+                                    continue;
+
+                                var presentablePriority = priorityValue.Substring(0, 1) + priorityValue.Substring(1).ToLower();
+                                <option value="@priority">@presentablePriority</option>
+                            }
+                        </InputSelect>
+                        <ValidationMessage For="@(() => DialogTargetQuest.QuestPriority)" />
+                    </div>
+                </div>
+                <div class="container" style="padding-top:20px">
+                    <div class="form-group">
+                        <label class="form-label">Player Visible</label>
+                        <input @bind="DialogTargetQuest.PlayerVisible" class="form-check" type="checkbox">
+                    </div>
+                </div>
+                <div class="container" style="padding-top:20px">
+                    <div class="form-group">
+                        <label class="form-label">Repeatable</label>
+                        <input @bind="DialogTargetQuest.Repeatable" class="form-check" type="checkbox">
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex-item fill-column">
+                @if (DialogTargetQuest.QuestPrerequisites == null || DialogTargetQuest.QuestPrerequisites.Count == 0)
+                {
+                    <div class="container" style="padding-top:20px">
+                        <p style="padding-bottom: 10px;"><em>No prerequisites found for this quest, </em><button class="btn btn-link" @onclick="() => OpenSubObjectDialog(false,nameof(QuestPrerequisite))">Create one?</button></p>
+                    </div>
+                }
+                else
+                {
+                    <div class="row">
+                        <div class="col col-12">
+                            <table class="table" style="width: 100%;">
+                                <thead>
+                                    <tr>
+                                        <th>Id</th>
+                                        <th>Name</th>
+                                        <button class="btn btn-link" @onclick="() => OpenSubObjectDialog(false,nameof(QuestPrerequisite))">
+                                            <span class="oi oi-plus" style="color:var(--bs-success)"></span>
+                                        </button>
+
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var prerequisite in DialogTargetQuest.QuestPrerequisites)
+                                    {
+                                        <tr>
+                                            <td>@prerequisite.Id</td>
+                                            <td>@prerequisite.Name</td>
+                                            <button class="btn btn-link" @onclick="() => OpenDeleteDialog(prerequisite)">
+                                                <span class="oi oi-trash delete-trashcan-button"></span>
+                                            </button>
+                                            <button class="btn" @onclick="() => OpenSubObjectDialog(true, prerequisite)">
+                                                <span class="oi oi-pencil edit-pencil-button"></span>
+                                            </button>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                }
+
+                @if (DialogTargetQuest.QuestMeasurements == null || DialogTargetQuest.QuestMeasurements.Count == 0)
+                {
+                    <div class="container" style="padding-top:20px">
+                        <p style="padding-bottom: 10px;"><em>No measurments found for this quest, </em><button class="btn btn-link" @onclick="() => OpenSubObjectDialog(false,nameof(QuestMeasurement))">Create one?</button></p>
+                    </div>
+                }
+                else
+                {
+                    <div class="row">
+                        <div class="col col-12">
+                            <table class="table" style="width: 100%;">
+                                <thead>
+                                    <tr>
+                                        <th>Id</th>
+                                        <th>Name</th>
+                                        <button class="btn btn-link" @onclick="() => OpenSubObjectDialog(false,nameof(QuestMeasurement))">
+                                            <span class="oi oi-plus" style="color:var(--bs-success)"></span>
+                                        </button>
+
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var measurement in DialogTargetQuest.QuestMeasurements)
+                                    {
+                                        <tr>
+                                            <td>@measurement.Id</td>
+                                            <td>@measurement.Name</td>
+                                            <button class="btn btn-link" @onclick="() => OpenDeleteDialog(measurement)">
+                                                <span class="oi oi-trash delete-trashcan-button"></span>
+                                            </button>
+                                            <button class="btn btn-link" @onclick="() => OpenSubObjectDialog(true, measurement)">
+                                                <span class="oi oi-pencil edit-pencil-button"></span>
+                                            </button>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                }
+
+
+                @if (DialogTargetQuest.QuestOutcomes == null || DialogTargetQuest.QuestOutcomes.Count == 0)
+                {
+                    <div class="container" style="padding-top:20px">
+                        <p style="padding-bottom: 10px;"><em>No Outcomes found for this quest, </em><button class="btn btn-link" @onclick="() => OpenSubObjectDialog(false,nameof(QuestOutcome))">Create one?</button></p>
+                    </div>
+                }
+                else
+                {
+                    <div class="row">
+                        <div class="col col-12">
+                            <table class="table" style="width: 100%;">
+                                <thead>
+                                    <tr>
+                                        <th>Id</th>
+                                        <th>Name</th>
+                                        <button class="btn btn-link" @onclick="() => OpenSubObjectDialog(false,nameof(QuestOutcome))">
+                                            <span class="oi oi-plus" style="color:var(--bs-success)"></span>
+                                        </button>
+
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var outcome in DialogTargetQuest.QuestOutcomes)
+                                    {
+                                        <tr>
+                                            <td>@outcome.Id</td>
+                                            <td>@outcome.Name</td>
+                                            <button class="btn btn-link" @onclick="() => OpenDeleteDialog(outcome)">
+                                                <span class="oi oi-trash delete-trashcan-button"></span>
+                                            </button>
+                                            <button class="btn btn-link" @onclick="() => OpenSubObjectDialog(true, outcome)">
+                                                <span class="oi oi-pencil edit-pencil-button"></span>
+                                            </button>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            @if (DeleteDialogOpen && SubObjectDialogState == DialogState.NULL)
+            {
+                <ModalDialog Title="Delete Quest Prerequisite" Text="Delete name of prq?" OnClose="@CloseDeleteDialog"></ModalDialog>
+            }
+
+            @if (!DeleteDialogOpen && SubObjectDialogState != DialogState.NULL)
+            {
+                var subObjectType = _subObjectInDialog.GetType().Name;
+
+                @if (subObjectType == nameof(QuestPrerequisite))
+                {
+                    QuestPrerequisite subObjectAsPrequisite = (QuestPrerequisite)_subObjectInDialog;
+                    <QuestPrerequisiteModal Title="Create a new quest" DialogTarget="@subObjectAsPrequisite" CurrentDialogState="@SubObjectDialogState" OnClose="@CloseSubObjectDialog"></QuestPrerequisiteModal>
+                }
+                @if (subObjectType == nameof(QuestMeasurement))
+                {
+                    QuestMeasurement subObjectAsMeasurement = (QuestMeasurement)_subObjectInDialog;
+                    <QuestMeasurementModal Title="Create a new quest" DialogTarget="@subObjectAsMeasurement" CurrentDialogState="@SubObjectDialogState" OnClose="@CloseSubObjectDialog"></QuestMeasurementModal>
+                }
+
+                @if (subObjectType == nameof(QuestOutcome))
+                {
+                    QuestOutcome subObjectAsMeasurement = (QuestOutcome)_subObjectInDialog;
+                    <QuestOutcomeModal Title="Create a new quest" DialogTarget="@subObjectAsMeasurement" CurrentDialogState="@SubObjectDialogState" OnClose="@CloseSubObjectDialog"></QuestOutcomeModal>
+                }
+            }
+
+        </EditForm>
+    </div>
+    <div style="padding-top:50px">
+        <button type="button" class="btn btn-secondary" @onclick=@CloseForm>Cancel</button>
+        <button type="button" class="btn btn-primary" @onclick=@CloseForm>Ok</button>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "callingPage")]
+    public string CallingPagePath { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "questId")]
+    public string QuestId { get; set; }
+
+    private EditContext EditContext;
+    public Quest DialogTargetQuest;
+    public string Title;
+
+    protected override void OnInitialized()
+    {
+        if (!string.IsNullOrEmpty(QuestId))
+            DialogTargetQuest = QuestDbConnection.GetQuest(QuestId);
+
+        if (DialogTargetQuest == null)
+            DialogTargetQuest = new Quest();
+
+        if (String.IsNullOrEmpty(Title))
+            Title = "Create a new Quest";
+
+        EditContext = new EditContext(DialogTargetQuest);
+
+        base.OnInitialized();
+    }
+
+    private void CloseForm()
+    {
+        if (string.IsNullOrEmpty(CallingPagePath))
+            NavigationManager.NavigateTo("/");
+
+        NavigationManager.NavigateTo(CallingPagePath);
+    }
+
+    private void SaveAndClose()
+    {
+        if (!string.IsNullOrEmpty(QuestId))
+            QuestDbConnection.UpdateQuest(DialogTargetQuest);
+        else
+            QuestDbConnection.CreateQuest(DialogTargetQuest);
+        CloseForm();
+    }
+
+    public DialogState SubObjectDialogState { get; set; }
+    private QuestSubObject _subObjectInDialog;
+
+    private string deletionTarget = "";
+    private string deletionTargetType = "";
+    public bool DeleteDialogOpen { get; set; }
+
+    private void OpenSubObjectDialog(bool update, string dialogTargetType)
+    {
+        if (string.IsNullOrEmpty(dialogTargetType))
+            throw new InvalidOperationException("A valid dialog target type is required to open a prerequisite dialog");
+
+        switch (dialogTargetType)
+        {
+            case nameof(QuestPrerequisite):
+                OpenSubObjectDialog(update, new QuestPrerequisite());
+                break;
+            case nameof(QuestMeasurement):
+                OpenSubObjectDialog(update, new QuestMeasurement());
+                break;
+            case nameof(QuestOutcome):
+                OpenSubObjectDialog(update, new QuestOutcome());
+                break;
+            default:
+                throw new InvalidDataException("A valid Sub Object type was not provided in parameter dialogTargetType");
+                break;
+        }
+    }
+
+    private void OpenSubObjectDialog(bool update, QuestSubObject subObject)
+    {
+        if (update && (string.IsNullOrEmpty(subObject.Id)))
+            throw new ArgumentNullException("Invalid prerequisite information provided to update");
+
+        SubObjectDialogState = DialogState.CREATE;
+
+        if (update)
+            SubObjectDialogState = DialogState.UPDATE;
+
+        _subObjectInDialog = subObject;
+    }
+
+    private void CloseSubObjectDialog(DialogCallback<QuestSubObject> callback)
+    {
+        SubObjectDialogState = DialogState.NULL;
+
+        //save going to database by returning from bad data(connection is responsible for ids)
+        if (callback?.CallbackObject == null)
+            return;
+
+        switch (callback.CallbackState)
+        {
+            case DialogState.CREATE:
+                CreateSubObjectToRespectiveList(callback.CallbackObject);
+                break;
+            case DialogState.UPDATE:
+                FindAndReplaceSubObjectToRespectiveList(callback.CallbackObject);
+                break;
+            default:
+                return;
+        }
+    }
+
+    private void OpenDeleteDialog(QuestSubObject questSubObject)
+    {
+        DeleteDialogOpen = true;
+        deletionTarget = questSubObject.Id;
+        deletionTargetType = questSubObject.GetType().Name;
+    }
+
+    private void CloseDeleteDialog(bool accepted)
+    {
+        DeleteDialogOpen = false;
+
+        if (!accepted)
+            return;
+
+        var objectType = deletionTarget.GetType();
+        switch (deletionTargetType)
+        {
+            case nameof(QuestPrerequisite):
+                DialogTargetQuest.RemoveSubObject<QuestPrerequisite>(deletionTarget);
+                break;
+            case nameof(QuestMeasurement):
+                DialogTargetQuest.RemoveSubObject<QuestMeasurement>(deletionTarget);
+                break;
+            case nameof(QuestOutcome):
+                DialogTargetQuest.RemoveSubObject<QuestOutcome>(deletionTarget);
+                break;
+            default:
+                break;
+        }
+
+        deletionTarget = "";
+    }
+
+    private void CreateSubObjectToRespectiveList(QuestSubObject subObject)
+    {
+        var objectType = subObject.GetType().Name;
+        switch (objectType)
+        {
+            case nameof(QuestPrerequisite):
+                DialogTargetQuest.AddSubObject<QuestPrerequisite>((QuestPrerequisite)subObject);
+                break;
+            case nameof(QuestMeasurement):
+                DialogTargetQuest.AddSubObject<QuestMeasurement>((QuestMeasurement)subObject);
+                break;
+            case nameof(QuestOutcome):
+                DialogTargetQuest.AddSubObject<QuestOutcome>((QuestOutcome)subObject);
+                break;
+            default:
+                break;
+        }
+    }
+
+    private void FindAndReplaceSubObjectToRespectiveList(QuestSubObject subObject)
+    {
+        var objectType = subObject.GetType().Name;
+        switch (objectType)
+        {
+            case nameof(QuestPrerequisite):
+                DialogTargetQuest.FindAndReplaceSubObject<QuestPrerequisite>((QuestPrerequisite)subObject);
+                break;
+            case nameof(QuestMeasurement):
+                DialogTargetQuest.FindAndReplaceSubObject<QuestMeasurement>((QuestMeasurement)subObject);
+                break;
+            case nameof(QuestOutcome):
+                DialogTargetQuest.FindAndReplaceSubObject<QuestOutcome>((QuestOutcome)subObject);
+                break;
+            default:
+                break;
+        }
+    }
+
+    ////
+}

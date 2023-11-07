@@ -1,0 +1,35 @@
+﻿@media (max-width: 641px) {
+    .form-flex-container {
+        display: flex;
+        flex-direction: column;
+    }
+}
+
+@media (min-width: 641px) {
+    .form-flex-container {
+        display: flex;
+        flex-direction: row;
+    }
+
+    .fill-column {
+        min-width: 641px;
+    }
+
+    .close-button {
+        left: 40%;
+        position: relative;
+    }
+}
+
+.flex-item {
+    flex: 1;
+    padding: 10px 50px 10px 10px;
+    display:inline-grid;
+}
+
+
+
+.custom-header {
+    display:flex;
+   
+}

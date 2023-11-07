@@ -1,0 +1,46 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Pages\QuestForm.razor.css" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Pages\QuestForm.razor.css" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NETStandard.Library" Version="2.0.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="QuestManager">
+      <HintPath>..\..\QuestManager\QuestManager\bin\Debug\netstandard2.0\QuestManager.dll</HintPath>
+    </Reference>
+    <Reference Include="QuestManagerClientApi">
+      <HintPath>..\..\QuestManager\QuestManagerApi\bin\Debug\netstandard2.0\QuestManagerClientApi.dll</HintPath>
+    </Reference>
+    <Reference Include="QuestManagerSharedResources">
+      <HintPath>..\..\QuestManager\QuestManagerSharedResources\bin\Debug\netstandard2.0\QuestManagerSharedResources.dll</HintPath>
+    </Reference>
+    <Reference Include="QuestProgressionManager">
+      <HintPath>..\..\QuestManager\QuestProgressionManager\bin\Debug\netstandard2.0\QuestProgressionManager.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+	<ItemGroup>
+		<SupportedPlatform Include="browser" />
+	</ItemGroup>
+
+</Project>

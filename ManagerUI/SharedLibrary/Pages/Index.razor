@@ -1,0 +1,120 @@
+﻿@page "/"
+
+@using QuestManagerSharedResources.Model
+@using SharedLibrary.Data
+@using SharedLibrary.Data.Callback
+@using SharedLibrary.Data.Enum
+@using SharedLibrary.Shared.Components
+@inject IQuestDbConnection QuestDbConnection
+@inject NavigationManager NavigationManager
+
+<PageTitle>Manage Quests</PageTitle>
+
+@if (quests == null || quests.Count == 0)
+{
+    <p style="text-align:center; padding: 20px;"><em>No quest data was found! Add Quest to get started</em></p>
+    <div style="text-align:center;">
+        <button class="btn btn-primary" @onclick="() =>FormQuestPageUrl()">Counter</button>
+        <button class="btn btn-primary" @onclick="() =>FormQuestPageUrl()">Counter</button>
+    </div>
+}
+else
+{
+    <div class="container" style="padding-top:20px">
+        <div class="row">
+            <div class="col col-12">
+                <table class="table table-hover" style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th class="col-xs-2" scope="col">Id</th>
+                            <th class="col-xs-4" scope="col">Name</th>
+                            <th class="col-xs-5" scope="col">Description</th>
+                            <th class="col-xs-1" >
+                            <button class="btn btn-link" @onclick="() =>FormQuestPageUrl()">
+                                <span class="oi oi-plus" style="color:var(--bs-success)"></span>
+                            </button>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var quest in quests)
+                        {
+                            <tr>
+                                <td>@quest.Id</td>
+                                <td>@quest.Name</td>
+                                <td>@quest.Description</td>
+                                <td>
+                                <button class="btn btn-link" @onclick="() => OpenDeleteDialog(quest)">
+                                    <span class="oi oi-trash delete-trashcan-button"></span>
+                                </button>
+                                <button class="btn" @onclick="() => FormQuestPageUrl(quest)">
+                                    <span class="oi oi-pencil edit-pencil-button"></span>
+                                </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+}
+
+@if (DeleteDialogOpen)
+{
+    <ModalDialog Title="Delete Quest" Text="Delete name of quest?" OnClose="@CloseDeleteDialog"></ModalDialog>
+}
+
+@code {
+
+    public bool DeleteDialogOpen { get; set; }
+    private string _questToDelete;
+
+    private List<Quest>? quests;
+
+    protected override async Task OnInitializedAsync()
+    {
+        quests = QuestDbConnection.GetAllQuests();
+    }
+
+    private void CreateNewQuest()
+    {
+        var sampleQuests = new List<Quest>()
+            {
+                new Quest {Id = "Q1"}
+            };
+
+        QuestDbConnection.CreateQuests(sampleQuests);
+        QuestDbConnection.SaveQuestDbChanges();
+    }
+
+    private void FormQuestPageUrl(Quest quest = null)
+    {
+
+        string questUrl = $"{Constants.Routes.QuestForm}?callingPage={Constants.Routes.QuestList}";
+
+        if (quest != null)
+            questUrl += "&questId=" + quest.Id;
+
+        NavigationManager.NavigateTo(questUrl);
+    }
+
+    private void CloseDeleteDialog(bool accepted)
+    {
+        DeleteDialogOpen = false;
+
+        if (!accepted)
+            return;
+
+        QuestDbConnection.DeleteQuest(_questToDelete);
+        QuestDbConnection.SaveQuestDbChanges();
+        quests = QuestDbConnection.GetAllQuests();
+    }
+
+    private void OpenDeleteDialog(Quest quest)
+    {
+        DeleteDialogOpen = true;
+        _questToDelete = quest.Id;
+    }
+}

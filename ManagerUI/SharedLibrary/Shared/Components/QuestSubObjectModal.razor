@@ -1,0 +1,68 @@
+﻿@using Microsoft.AspNetCore.Components.Forms
+@using QuestManagerSharedResources.Model
+@using QuestManagerSharedResources.Model.Enums
+@using SharedLibrary.Data.Callback
+@using SharedLibrary.Data.Enum
+
+<div class="modal fade show" id="reqModal" style="display:block;" aria-modal="true" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">@Title</h4>
+                <button type="button" class="close" @onclick="@ModalCancel">&times;</button>
+            </div>
+            <div class="modal-body">
+                <EditForm EditContext="@EditContext">
+                     <div class="form-group">
+                        <label for="name" class="form-label">Name</label>
+                        <input id="name" @bind="DialogTarget.Name" class="form-control" type="text" placeholder="Name">
+                    </div>
+                        @ChildComponent                       
+                </EditForm>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn" @onclick="@ModalCancel">Cancel</button>
+                <button type="button" class="btn btn-primary" @onclick=@ModalOk>OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private EditContext EditContext;
+
+        [Parameter]
+    public RenderFragment ChildComponent { get; set; }
+
+    [Parameter]
+    public string Title { get; set; }
+
+    [Parameter]
+    public QuestSubObject DialogTarget { get; set; }
+
+    [Parameter]
+    public DialogState CurrentDialogState { get; set; }
+
+    [Parameter]
+    public EventCallback<DialogCallback<QuestSubObject>> OnClose { get; set; }
+
+    protected override void OnInitialized()
+    {
+        EditContext = new EditContext(DialogTarget);
+
+        base.OnInitialized();
+    }
+
+    protected virtual Task ModalCancel()
+    {
+        var result = new DialogCallback<QuestSubObject>(null, DialogState.NULL);
+        return OnClose.InvokeAsync(null);
+    }
+
+    protected virtual Task ModalOk()
+    {
+                var result = new DialogCallback<QuestSubObject>(DialogTarget, CurrentDialogState);
+
+        return OnClose.InvokeAsync(result);
+    }
+}

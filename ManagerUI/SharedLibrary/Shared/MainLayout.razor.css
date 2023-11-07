@@ -1,0 +1,25 @@
+.page {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+}
+
+main {
+    flex: 1;
+}
+
+.sidebar {
+    background-color: var(--bs-primary);
+    filter: brightness(150%);
+    height: 100vh;
+}
+
+@media (min-width: 641px) {
+
+    .sidebar {
+        width: 250px;
+       
+        position: sticky;
+        top: 0;
+    }
+}

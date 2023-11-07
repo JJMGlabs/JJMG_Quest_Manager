@@ -1,0 +1,105 @@
+﻿@using Microsoft.AspNetCore.Components.Forms
+@using QuestManagerSharedResources.Model
+@using QuestManagerSharedResources.Model.Enums
+@using QuestManagerSharedResources.QuestSubObjects
+@using SharedLibrary.Data.Callback
+@using SharedLibrary.Data.Enum
+
+@inherits  SubObjectMeasurableModal
+
+@{
+    base.BuildRenderTree(__builder);
+}
+
+@code {
+    protected override void OnInitialized()
+    {
+        questMeasurement = (QuestMeasurement)DialogTarget;
+
+        if (questMeasurement.TriggeredGameEventIDs == null)
+            questMeasurement.TriggeredGameEventIDs = new List<string>();
+
+        ResetEventListBindings();
+
+        ChildComponent = (__builder) =>
+        {
+            <div class="form-group">
+                <label class="form-label">Measurement Reached</label>
+                <input @bind="questMeasurement.MeasurementReached" class="form-check" type="checkbox">
+            </div>
+            <div class="form-group">
+                <label class="form-label">MeasurementFailed </label>
+                <input @bind="questMeasurement.MeasurementFailed " class="form-check" type="checkbox">
+            </div>
+            <div class="form-group">
+                <label class="form-label">QuestCompletionPrerequisite </label>
+                <input @bind="questMeasurement.QuestCompletionRequirement" class="form-check" type="checkbox">
+            </div>
+            <div class="form-group">
+                <label for="id" class="form-label">Events IDs</label>
+                <input id="id" @bind="@EventIdToAdd" class="form-control" type="text" placeholder="Enter a valid Event ID">
+                <button @onclick="AddItem" class="btn btn-primary">Add</button>
+                <ul class="list-group">
+                    @foreach (var item in eventListBinding)
+                    {
+                        <li class="list-group-item">
+                            <input id="id" @bind="@item.Value" class="form-control" type="text" placeholder="@item">
+                            <button @onclick="(() => UpdateItem(item.Index,item.Value))" class="btn btn-secondary">Update</button>
+                            <button @onclick="(() => DeleteItem(item.Index))" class="btn btn-danger">Delete</button>
+                        </li>
+                    }
+                </ul>
+
+        </div>
+
+        };
+        base.OnInitialized();
+    }
+
+    string EventIdToAdd;
+
+    private QuestMeasurement questMeasurement;
+
+    private List<EventListBinding> eventListBinding = new List<EventListBinding>();
+
+    void AddItem()
+    {
+        if (!string.IsNullOrWhiteSpace(EventIdToAdd))
+        {
+            questMeasurement.TriggeredGameEventIDs.Add(EventIdToAdd);
+            EventIdToAdd = string.Empty;
+            ResetEventListBindings();
+        }
+    }
+
+    void UpdateItem(int index, string id)
+    {
+        questMeasurement.TriggeredGameEventIDs[index] = id;
+        ResetEventListBindings();
+    }
+
+    void DeleteItem(int index)
+    {
+        questMeasurement.TriggeredGameEventIDs.RemoveAt(index);
+        ResetEventListBindings();
+    }
+
+    void ResetEventListBindings()
+    {
+        eventListBinding.Clear();
+
+        for (int i = 0; i < questMeasurement.TriggeredGameEventIDs.Count; i++)
+            eventListBinding.Add(new EventListBinding(i, questMeasurement.TriggeredGameEventIDs[i]));
+    }
+
+        private class EventListBinding
+    {
+        public int Index { get; set; }
+        public string Value { get; set; }
+        public EventListBinding(int index, string value)
+        {
+            Index = index;
+            Value = value;
+        }
+    }
+}

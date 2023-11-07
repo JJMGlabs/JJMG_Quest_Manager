@@ -1,0 +1,30 @@
+﻿@inherits LayoutComponentBase
+
+<PageTitle>BlazorServerManagerUi</PageTitle>
+
+<div class="page">
+    <div class="sidebar" style="@IconMenuCssClass">
+        <NavMenu ShowIconMenu="ToggleIconMenu" />
+    </div>
+
+    <main>
+        <nav class="navbar  bg-primary" data-bs-theme="dark">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#">Navbar</a>
+            </div>
+        </nav>
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>
+
+@code {
+    private bool _navMenuCollapsed { get; set; }
+    private string? IconMenuCssClass => _navMenuCollapsed ? "width: 60px;" : null;
+
+    protected void ToggleIconMenu(bool navMenuCollapsed)
+    {
+        _navMenuCollapsed = navMenuCollapsed;
+    }
+}

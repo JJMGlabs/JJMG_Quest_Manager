@@ -1,0 +1,8 @@
+﻿# Quest Manager API
+
+This project is where any code a client application (such as a game on a users machine) would be placed.
+The reasons for code being here would include:
+
+- You want to hide the game engine logic from the player so that they can not directly change things(this is why there is not many endpoints here)
+- You want to host an API online for a shared source of quest information.
+- Your application will not be responsible for editing the game quests, so will read only from the quests

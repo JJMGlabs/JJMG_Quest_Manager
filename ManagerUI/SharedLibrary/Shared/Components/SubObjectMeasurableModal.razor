@@ -1,0 +1,52 @@
+﻿@using Microsoft.AspNetCore.Components.Forms
+@using QuestManagerSharedResources.Model
+@using QuestManagerSharedResources.Model.Enums
+@using QuestManagerSharedResources.QuestSubObjects
+@using SharedLibrary.Data.Callback
+@using SharedLibrary.Data.Enum
+
+@inherits QuestSubObjectModal
+
+@{
+    base.BuildRenderTree(__builder);
+}
+
+@code {
+    private SubObjectMeasurable subObjectMeasurable;
+    protected override void OnInitialized()
+    {
+        subObjectMeasurable = (SubObjectMeasurable)DialogTarget;
+
+        var measurableChild = ChildComponent;
+
+        ChildComponent = (__builder) =>
+        {
+            @measurableChild
+            <div class="form-group">
+                <label class="form-label">Target Value</label>
+                <input @bind="subObjectMeasurable.TargetValue" class="form-control" type="text" placeholder="Target Value">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Progress Value (save value only)</label>
+                <input @bind="subObjectMeasurable.ProgressValue" class="form-control" type="text" placeholder="Target Value">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Comparator</label>
+                <InputSelect @bind-Value="@subObjectMeasurable.Comparator" class="form-select">
+                    @foreach (var comparator in Enum.GetValues(typeof(SubObjectComparator)))
+                    {
+                        var comparatorValue = comparator.ToString();
+
+                        if (comparatorValue == null)
+                            continue;
+
+                        var presentableComparator = comparatorValue.Substring(0, 1) + comparatorValue.Substring(1).ToLower();
+                <option value="@comparator">@presentableComparator</option>
+                    }
+        </InputSelect>
+        <ValidationMessage For="@(() => subObjectMeasurable.Comparator)" />
+    </div>           
+        };
+        base.OnInitialized();
+    }
+}

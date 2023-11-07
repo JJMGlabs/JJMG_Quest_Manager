@@ -1,0 +1,43 @@
+﻿<div class=" navbar navbar-expand-lg bg-primary">
+    <button title="Navigation menu" class="btn nav-toggle" @onclick="ToggleNavMenu">
+        @if (!NavMenuCollapsed)
+        {
+            <span class="oi oi-arrow-left"></span>
+        }
+        else
+        {
+            <span class="oi oi-menu"></span>
+
+        }
+    </button>
+
+</div>
+
+<div class="@NavMenuIconAlign" @onclick="ToggleNavMenu">
+    <nav class="flex-column">
+        <div class="nav-item">
+            <NavLink class="nav-link" href="@Constants.Routes.QuestList" Match="NavLinkMatch.All">
+                <span class="oi oi-home" aria-hidden="true"></span>
+                @if (!NavMenuCollapsed)
+                {
+                    <nav-link>Manage Quests</nav-link>
+                }
+            </NavLink>
+        </div>
+    </nav>
+</div>
+
+@code {
+    private bool NavMenuCollapsed { get; set; } = false;
+
+    [Parameter]
+    public EventCallback<bool> ShowIconMenu { get; set; }
+
+    private string? NavMenuIconAlign => NavMenuCollapsed ? "nav-menu-items-align" : "";
+
+    private async Task ToggleNavMenu()
+    {
+        NavMenuCollapsed = !NavMenuCollapsed;
+        await ShowIconMenu.InvokeAsync(NavMenuCollapsed);
+    }
+}
