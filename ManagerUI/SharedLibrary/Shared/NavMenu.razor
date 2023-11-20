@@ -1,18 +1,16 @@
 ﻿
 <div class="sidebar-container">
-<div class="@NavMenuIconAlign" @onclick="ToggleNavMenu">
-    <nav class="flex-column">
+
         <div class="nav-item">
-            <NavLink class="nav-link" href="@Constants.Routes.QuestList" Match="NavLinkMatch.All">
+            <NavLink class="nav-link"  style="@NavMenuIconAlign" href="@Constants.Routes.QuestList" Match="NavLinkMatch.All">
                 <span class="oi oi-home" aria-hidden="true"></span>
                 @if (!NavMenuCollapsed)
                 {
-                    <nav-link>Manage Quests</nav-link>
+                    <nav-link class="nav-link-text">Manage Quests</nav-link>
                 }
             </NavLink>
         </div>
-    </nav>
-</div>
+
 
 
 </div>
@@ -24,7 +22,7 @@
         }
         else
         {
-            <span class="oi oi-menu"></span>
+            <span class="oi oi-arrow-right"></span>
 
         }
     </button>
@@ -36,7 +34,7 @@
     [Parameter]
     public EventCallback<bool> ShowIconMenu { get; set; }
 
-    private string? NavMenuIconAlign => NavMenuCollapsed ? "nav-menu-items-align" : "";
+    private string? NavMenuIconAlign => NavMenuCollapsed ? "justify-content: center;" : "padding-left: 10px";
 
     private async Task ToggleNavMenu()
     {

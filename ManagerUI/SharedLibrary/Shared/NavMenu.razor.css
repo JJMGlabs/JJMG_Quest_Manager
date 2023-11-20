@@ -17,7 +17,11 @@
     margin-top: auto;
 }
 
-
+.nav-link-text {
+    font-family: sans-serif;
+    padding-left: 10px;
+    font-size: larger;
+}
 
 .nav-item {
     font-size: 0.9rem;
