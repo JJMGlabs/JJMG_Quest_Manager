@@ -1,18 +1,5 @@
-﻿<div class=" navbar navbar-expand-lg bg-primary">
-    <button title="Navigation menu" class="btn nav-toggle" @onclick="ToggleNavMenu">
-        @if (!NavMenuCollapsed)
-        {
-            <span class="oi oi-arrow-left"></span>
-        }
-        else
-        {
-            <span class="oi oi-menu"></span>
-
-        }
-    </button>
-
-</div>
-
+﻿
+<div class="sidebar-container">
 <div class="@NavMenuIconAlign" @onclick="ToggleNavMenu">
     <nav class="flex-column">
         <div class="nav-item">
@@ -27,8 +14,24 @@
     </nav>
 </div>
 
+
+</div>
+<div class=" navbar navbar-expand-lg bg-primary navbar-bottom">
+    <button title="Navigation menu" class="btn nav-toggle" @onclick="ToggleNavMenu">
+        @if (!NavMenuCollapsed)
+        {
+            <span class="oi oi-arrow-left"></span>
+        }
+        else
+        {
+            <span class="oi oi-menu"></span>
+
+        }
+    </button>
+
+</div>
 @code {
-    private bool NavMenuCollapsed { get; set; } = false;
+    private bool NavMenuCollapsed { get; set; } = true;
 
     [Parameter]
     public EventCallback<bool> ShowIconMenu { get; set; }
