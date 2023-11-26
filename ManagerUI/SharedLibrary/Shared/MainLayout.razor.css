@@ -16,6 +16,10 @@ nav.navbar {
     height: 100%;
 }
 
+.page-content{
+    width:100%;
+}
+
 .sidebar {
     background-color: var(--bs-primary);
     filter: brightness(150%);
