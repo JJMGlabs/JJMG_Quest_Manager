@@ -10,7 +10,7 @@
 @inject NavigationManager NavigationManager
 @inject IQuestDbConnection QuestDbConnection
 
-<div class="container" style="padding-top:20px">
+<div class="container container-spacing">
     <div class="page-header custom-header">
         <h3>@Title</h3>
         <button type="button " class="btn btn-link close-button" @onclick=@CloseForm><span class="oi oi-x"></span></button>
@@ -18,22 +18,22 @@
     <div class="form-flex-container">
         <EditForm EditContext="@EditContext">
             <div class="flex-item">
-                <div class="container" style="padding-top:20px">
+                <div class="container container-spacing">
                     <div class="form-group">
                         <label for="name" class="form-label">Name</label>
-                        <input id="name" @bind="DialogTargetQuest.Name" class="form-control" style="max-width:240px" type="text" placeholder="Quest Name">
+                        <input id="name" @bind="DialogTargetQuest.Name" class="form-control input-textbox" type="text" placeholder="Quest Name">
                     </div>
                 </div>
-                <div class="container" style="padding-top:20px">
+                <div class="container container-spacing">
                     <div class="form-group">
                         <label class="form-label">Description</label>
-                        <input @bind="DialogTargetQuest.Description" class="form-control" style="max-width:240px" type="text" placeholder="Quest Description">
+                        <input @bind="DialogTargetQuest.Description" class="form-control input-textbox" type="text" placeholder="Quest Description">
                     </div>
                 </div>
-                <div class="container" style="padding-top:20px">
+                <div class="container container-spacing">
                     <div class="form-group">
                         <label class="form-label">Quest Priority</label>
-                        <InputSelect @bind-Value="@DialogTargetQuest.QuestPriority" class="form-select" style="max-width:240px">
+                        <InputSelect @bind-Value="@DialogTargetQuest.QuestPriority" class="form-select input-textbox">
                             @foreach (var priority in Enum.GetValues(typeof(QuestPriority)))
                             {
                                 var priorityValue = priority.ToString();
@@ -48,16 +48,16 @@
                         <ValidationMessage For="@(() => DialogTargetQuest.QuestPriority)" />
                     </div>
                 </div>
-                <div class="container" style="padding-top:20px">
-                    <div class="form-group">
+                <div class="container container-spacing">
+                    <div class="form-group checkbox-form-group">
                         <label class="form-label">Player Visible</label>
-                        <input @bind="DialogTargetQuest.PlayerVisible" class="form-check" type="checkbox">
+                        <input @bind="DialogTargetQuest.PlayerVisible" class="form-check input-checkbox" type="checkbox">
                     </div>
                 </div>
-                <div class="container" style="padding-top:20px">
-                    <div class="form-group">
+                <div class="container container-spacing">
+                    <div class="form-group checkbox-form-group">
                         <label class="form-label">Repeatable</label>
-                        <input @bind="DialogTargetQuest.Repeatable" class="form-check" type="checkbox">
+                        <input @bind="DialogTargetQuest.Repeatable" class="form-check input-checkbox" type="checkbox">
                     </div>
                 </div>
             </div>
@@ -65,7 +65,7 @@
             <div class="flex-item fill-column">
                 @if (DialogTargetQuest.QuestPrerequisites == null || DialogTargetQuest.QuestPrerequisites.Count == 0)
                 {
-                    <div class="container" style="padding-top:20px">
+                    <div class="container container-spacing">
                         <p style="padding-bottom: 10px;"><em>No prerequisites found for this quest, </em><button class="btn btn-link" @onclick="() => OpenSubObjectDialog(false,nameof(QuestPrerequisite))">Create one?</button></p>
                     </div>
                 }
@@ -106,7 +106,7 @@
 
                 @if (DialogTargetQuest.QuestMeasurements == null || DialogTargetQuest.QuestMeasurements.Count == 0)
                 {
-                    <div class="container" style="padding-top:20px">
+                    <div class="container container-spacing">
                         <p style="padding-bottom: 10px;"><em>No measurments found for this quest, </em><button class="btn btn-link" @onclick="() => OpenSubObjectDialog(false,nameof(QuestMeasurement))">Create one?</button></p>
                     </div>
                 }
@@ -148,7 +148,7 @@
 
                 @if (DialogTargetQuest.QuestOutcomes == null || DialogTargetQuest.QuestOutcomes.Count == 0)
                 {
-                    <div class="container" style="padding-top:20px">
+                    <div class="container container-spacing">
                         <p style="padding-bottom: 10px;"><em>No Outcomes found for this quest, </em><button class="btn btn-link" @onclick="() => OpenSubObjectDialog(false,nameof(QuestOutcome))">Create one?</button></p>
                     </div>
                 }
