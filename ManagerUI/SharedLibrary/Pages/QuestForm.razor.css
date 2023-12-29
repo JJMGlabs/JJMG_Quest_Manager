@@ -27,7 +27,23 @@
     display:inline-grid;
 }
 
+.input-textbox {
+    max-width: 240px;
+}
 
+.container-spacing {
+    padding-top: 20px;
+}
+
+.input-checkbox{
+    margin-bottom:.5rem; /*To match form label*/
+    margin-left: 10px;
+}
+
+.checkbox-form-group{
+    display:flex;
+    flex-direction:row;
+}
 
 .custom-header {
     display:flex;

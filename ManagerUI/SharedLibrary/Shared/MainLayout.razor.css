@@ -1,25 +1,33 @@
 .page {
-    position: relative;
     display: flex;
-    flex-direction: row;
+    flex-direction: column;    
 }
 
-main {
-    flex: 1;
+nav.navbar {
+    width: 100%;
+    position: fixed;
+    top: 0;
+    z-index: 1000;
+}
+
+.wrapper {
+    display: flex;
+    margin-top: 70px; /* Adjust this based on the height of your navbar */
+    height: 100%;
+}
+
+.page-content{
+    width:100%;
 }
 
 .sidebar {
     background-color: var(--bs-primary);
     filter: brightness(150%);
-    height: 100vh;
-}
-
-@media (min-width: 641px) {
-
-    .sidebar {
-        width: 250px;
-       
-        position: sticky;
-        top: 0;
-    }
+    height: 100%;
+    width: 250px; /* Adjust this here and in the layout for MainContentCssClass */
+    position: fixed;
+    z-index: 900;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 70px; /* Adjust this based on the height of your navbar */
 }
