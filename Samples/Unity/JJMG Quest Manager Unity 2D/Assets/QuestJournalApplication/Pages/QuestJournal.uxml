@@ -1,0 +1,8 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <ui:VisualElement name="MenuBackground" style="flex-grow: 1; background-color: rgba(0, 0, 0, 0.75); flex-direction: row;">
+        <ui:ListView name="QuestList" focusable="true" virtualization-method="DynamicHeight" show-border="true" show-foldout-header="true" header-title="Quests" show-bound-collection-size="false" style="height: 736px; width: 386px;" />
+        <ui:VisualElement name="QuestInfo" style="flex-grow: 1; align-items: center; justify-content: center; background-color: rgb(34, 34, 34);">
+            <ui:Label tabindex="-1" text="Quest Info Control Here" parse-escape-sequences="true" display-tooltip-when-elided="true" name="QuestInfoPlaceholder" style="color: rgb(255, 255, 255); font-size: 30px; -unity-font-style: bold;" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

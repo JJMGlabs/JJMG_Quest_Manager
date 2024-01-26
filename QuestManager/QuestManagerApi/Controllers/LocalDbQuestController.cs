@@ -11,7 +11,11 @@ namespace QuestManagerApi.Controllers
     {
         public static List<Quest> GetAllQuestsFromDatabase()
         {
-            string basePath = $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}/questDb.json";
+           return GetAllQuestsFromDatabase(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),"questDb");
+        }
+        public static List<Quest> GetAllQuestsFromDatabase(string dbConnectionPath,string dbCollectionName)
+        {
+            string basePath = $"{dbConnectionPath}/{dbCollectionName}.json";
             var readFile = File.ReadAllText(basePath);
             return JsonConvert.DeserializeObject<List<Quest>>(readFile);
         }
