@@ -17,14 +17,9 @@ public class QuestListBehaviour : MonoBehaviour
 
     public List<Quest> Quests;
 
+    //Frequent rebuild was presenting a noticeable impact on performance, coroutine restricts this to value of this timer
+    private const float rebuildTimerSeconds = 2;
 
-    void LateUpdate()
-    {
-        if(_questList != null)
-        _questList.Rebuild();
-    }
-
-    //Add logic that interacts with the UI controls in the `OnEnable` methods
     private void OnEnable()
     {
         Quests = LocalDbQuestController.GetAllQuestsFromDatabase(Application.dataPath,Constants.QuestDb.QuestDbJsonFile);
@@ -37,5 +32,17 @@ public class QuestListBehaviour : MonoBehaviour
         _questList.bindItem = bindItem;
         _questList.itemsSource = Quests;    
         _questList.selectionChanged += Debug.Log;
+
+        StartCoroutine("RebuildRoutine");
+    }
+
+    IEnumerator RebuildRoutine()
+    {
+        for (; ; )
+        {
+            if (_questList != null)
+                _questList.Rebuild();
+            yield return new WaitForSeconds(rebuildTimerSeconds);
+        }
     }
 }
