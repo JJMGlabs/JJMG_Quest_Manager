@@ -16,15 +16,35 @@ namespace QuestProgressionManager.Managers
 {
     public class QuestProgressionManagerClient
     {
-        private readonly string basePath;
+        private string basePath;
         private List<Quest> _playerQuestData;
         EventWaitHandle _waitHandle;
+
+        private string _sourcDbConnectionPath = null;
+        private string _sourceDbCollectionName = null;
+        private string _questProgressionFilePath;
 
         public bool AutoSave { get; set; }
 
         public QuestProgressionManagerClient()
         {
-            basePath = $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}/questProgression.json";
+            Initialise();
+        }
+
+        public QuestProgressionManagerClient(string questProgressionFilePath, string sourceDbConnectionPath, string sourceDbCollectionName) : base()
+        {
+            _sourcDbConnectionPath = sourceDbConnectionPath;
+            _sourceDbCollectionName = sourceDbCollectionName;
+            _questProgressionFilePath = questProgressionFilePath;
+            Initialise();
+        }
+
+        private void Initialise()
+        {
+            if (string.IsNullOrEmpty(_questProgressionFilePath))
+                _questProgressionFilePath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+
+            basePath = $"{_questProgressionFilePath}/questProgression.json";
             _waitHandle = new EventWaitHandle(true, EventResetMode.AutoReset, "questManagerWaitFileAccess");
             Start();
             ReadAllAvailableQuestsFromDb();
@@ -75,27 +95,17 @@ namespace QuestProgressionManager.Managers
             return _playerQuestData.Find(q => q.Id == id);
         }
 
-        public List<Quest> GetAllActiveQuests()
-        {
-            return GetQuestsByState(QuestState.ACTIVE);
-        }
-        public List<Quest> GetAllCompleteQuests()
-        {
-            return GetQuestsByState(QuestState.COMPLETE);
-        }
-        public List<Quest> GetAllCurrentQuests()
-        {
-            return GetQuestsByState(QuestState.CURRENT);
-        }
-        public List<Quest> GetAllFailedQuests()
-        {
-            return GetQuestsByState(QuestState.FAILED);
-        }
+        public List<Quest> GetAllQuests() => _playerQuestData;
 
-        public List<Quest> GetQuestsByState(QuestState state)
-        {
-            return _playerQuestData.Where(q => q.State == state).ToList();
-        }
+        public List<Quest> GetAllActiveQuests() => GetQuestsByState(QuestState.ACTIVE);
+
+        public List<Quest> GetAllCompleteQuests() => GetQuestsByState(QuestState.COMPLETE);
+
+        public List<Quest> GetAllCurrentQuests() => GetQuestsByState(QuestState.CURRENT);
+
+        public List<Quest> GetAllFailedQuests() => GetQuestsByState(QuestState.FAILED);
+
+        public List<Quest> GetQuestsByState(QuestState state) => _playerQuestData.Where(q => q.State == state).ToList();
 
         private void UpdateQuestPrerequisites()
         {
@@ -169,24 +179,39 @@ namespace QuestProgressionManager.Managers
 
         public List<Quest> ReadPlayerQuestDataFromSaveFile()
         {
+            _playerQuestData = new List<Quest>();
+
+            
             if (_playerQuestData == null)
             {
-                var readFile = File.ReadAllText(basePath);
-                return JsonConvert.DeserializeObject<List<Quest>>(readFile);
+                _waitHandle.WaitOne();
+                if (File.Exists(basePath))
+                {
+                    var readFile = File.ReadAllText(basePath);
+                    var quests = JsonConvert.DeserializeObject<List<Quest>>(readFile);
+                    if (quests != null)
+                        _playerQuestData = quests;
+                }
+                _waitHandle.Set();
             }
 
             return _playerQuestData;
         }
 
-        public ResponseStatus SavePlayerQuestData()
-        {
-            return SavePlayerQuestDataToSaveFile(_playerQuestData);
-        }
+        public ResponseStatus SavePlayerQuestData() => SavePlayerQuestDataToSaveFile(_playerQuestData);
 
         private ResponseStatus SavePlayerQuestDataToSaveFile(List<Quest> playerQuestData)
         {
             var questsToSave = JsonConvert.SerializeObject(playerQuestData);
             _waitHandle.WaitOne();
+
+            if (!File.Exists(basePath))
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(basePath));
+                var createdProgressionData = File.Create(basePath);
+                createdProgressionData.Close();
+            }
+
             File.WriteAllText(basePath, questsToSave);
             _waitHandle.Set();
             return new ResponseStatus(true, "Successfully saved player progression");
@@ -209,10 +234,13 @@ namespace QuestProgressionManager.Managers
 
         private List<Quest> ReadAllAvailableQuestsFromDb()
         {
-            _ = new List<Quest>();
-            List<Quest> dbQuests = LocalDbQuestController.GetAllQuestsFromDatabase();
+            List<Quest> dbQuests;
+            if (string.IsNullOrEmpty(_sourcDbConnectionPath) && string.IsNullOrEmpty(_sourceDbCollectionName))
+                dbQuests = LocalDbQuestController.GetAllQuestsFromDatabase();
+            else
+                dbQuests = LocalDbQuestController.GetAllQuestsFromDatabase(_sourcDbConnectionPath, _sourceDbCollectionName);
 
-            if (dbQuests.Count == 0)
+            if (dbQuests == null || dbQuests.Count == 0)
                 throw new Exception("Failed to retrieve any quests from database");
 
             return dbQuests;

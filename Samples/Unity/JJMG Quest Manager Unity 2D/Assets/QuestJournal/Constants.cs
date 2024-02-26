@@ -7,5 +7,13 @@ namespace Assets.QuestJournalApplication.QuestJournal
         {
             public const string QuestDbJsonFile = "QuestDb";
         }
+        //TODO: revisit as potential configuration values
+        public static class DbBindingSettings
+        {
+            //Frequent rebuild was presenting a noticeable impact on performance, coroutine restricts this to value of this timer
+            public const float RebuildTimerSeconds = 2;
+            public const bool RebuildUpdate = true;
+        }
     }
+
 }
