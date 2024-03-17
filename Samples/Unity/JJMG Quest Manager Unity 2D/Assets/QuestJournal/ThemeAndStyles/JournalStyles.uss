@@ -24,3 +24,8 @@ margin:1%
 #unity-checkmark {
 -unity-background-image-tint-color:rgb(255, 255, 255);
 }
+
+.subObjectLstItmRow {
+flex-grow: 1; 
+flex-direction: row;
+}

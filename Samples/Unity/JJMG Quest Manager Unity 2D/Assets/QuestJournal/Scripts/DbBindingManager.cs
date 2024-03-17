@@ -16,6 +16,7 @@ public class DbBindingManager : MonoBehaviour
     VisualTreeAsset m_ItemAsset;
 
     private ListView _questList;
+    private VisualElement _questInfoPanel;
 
     public List<Quest> Quests;
 
@@ -27,11 +28,22 @@ public class DbBindingManager : MonoBehaviour
         Quests = ProgressionManager.GetAllQuests();
 
         _questList = GetComponent<UIDocument>().rootVisualElement.Q<ListView>("QuestList");
+        _questInfoPanel = GetComponent<UIDocument>().rootVisualElement.Q<VisualElement>("QuestInfoPanel");
 
         BindQuestList();
 
-        _questList.selectionChanged += BindQuestInfoPanelSelectionChangedEvent;
+        BindQuestInfoPanel(Quests.First());
 
+        _questList.selectionChanged += BindQuestInfoPanelSelectionChangedEvent;
+    }
+
+    private void BindQuestInfoPanel(Quest quest)
+    {
+        if (quest == null)
+            return;
+
+        _questInfoPanel.Q<Label>("QuestName").text = quest.Name;
+        _questInfoPanel.Q<ScrollView>("Description").contentContainer.Q<Label>("DescriptionBody").text = quest.Description;
     }
 
     private void BindQuestInfoPanelSelectionChangedEvent(IEnumerable<object> selectedItems)
@@ -40,8 +52,7 @@ public class DbBindingManager : MonoBehaviour
             return;
 
         var firstSelectedItem = selectedItems.First() as Quest;
-            //Pass the data of the Objects into the bindings
-
+        BindQuestInfoPanel(firstSelectedItem);
     }
 
     private void BindQuestList()
