@@ -11,6 +11,7 @@
         {
             public static string QuestList = "";
             public static string QuestForm = "questForm";
+            public static string Settings = "settings";
         }
     }
 }

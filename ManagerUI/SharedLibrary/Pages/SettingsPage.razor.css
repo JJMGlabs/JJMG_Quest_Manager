@@ -1,0 +1,27 @@
+﻿.settingContainer{
+    max-width: 80%;
+    display:flex;
+    justify-content: space-between;
+    padding-bottom: 20px;
+}
+
+.settingDetailContainer{
+    display:flex;
+    flex-direction:column;
+}
+
+.settingDetailHeader{
+    font-weight:bold;
+    font-size:larger;
+    padding-bottom: 5px;
+}
+
+.settingDetailDescription{
+    font-style:italic;
+}
+
+.settingControlContainer{
+    display:flex;
+    justify-content:flex-end;
+    flex-direction:column;
+}
