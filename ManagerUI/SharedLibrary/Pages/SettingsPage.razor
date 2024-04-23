@@ -9,6 +9,8 @@
 @inject IOptions<DbConnectionOptions> questDbOptions;
 @inject IWritableOptions<DbConnectionOptions> questDbOptionsWriteAccess;
 
+@inject NavigationManager navManager;
+
 <PageTitle>Settings</PageTitle>
 
 <div class="container" style="padding-top:20px">
@@ -126,6 +128,9 @@
             opt.BasePath = questDbOptions.Value.BasePath;
             opt.CollectionName = questDbOptions.Value.CollectionName;
         });
+
+        //force reload to update QuestManager
+        navManager.NavigateTo(navManager.Uri, forceLoad: true);
     }
 
 

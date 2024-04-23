@@ -12,7 +12,7 @@ namespace SharedLibrary
         {
             services.ConfigureWritable<DbConnectionOptions>(configuration.GetSection(Constants.QuestDbConfigurationSection));
 
-            services.AddSingleton<IQuestDbConnection, QuestDbConnection>();
+            services.AddScoped<IQuestDbConnection, QuestDbConnection>();
         }
     }
 }
