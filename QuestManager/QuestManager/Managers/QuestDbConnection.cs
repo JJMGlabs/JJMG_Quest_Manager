@@ -5,6 +5,7 @@ using QuestManager.Utility;
 using QuestManagerSharedResources;
 using QuestManagerSharedResources.Model;
 using QuestManagerSharedResources.Model.Utility;
+using QuestManagerSharedResources.Utility;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -37,7 +38,10 @@ namespace QuestManager.Managers
 
         public ResponseStatus SaveQuestDbChanges()
         {
-            var questsToSave = JsonConvert.SerializeObject(GetAllQuests());
+            var questsToSave = JsonConvert.SerializeObject(GetAllQuests(), new JsonSerializerSettings
+            {
+                ContractResolver = new JsonReadOnlyPropertiesResolver()
+            });
 
             SaveDbBackup();
 

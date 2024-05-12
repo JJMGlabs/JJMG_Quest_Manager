@@ -590,7 +590,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8dbe9843e4974a242b8fc6f2b28a05b2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_ItemAsset: {fileID: 9197481963319205126, guid: e652da5a365f97f4396d440fec926297, type: 3}
+  m_QuestListItemAsset: {fileID: 9197481963319205126, guid: e652da5a365f97f4396d440fec926297, type: 3}
+  m_MeasurementItemAsset: {fileID: 9197481963319205126, guid: 1707b9da71a45fd48845e9fee8b21da1, type: 3}
 --- !u!1 &1115018554
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,6 +1,7 @@
 using Assets.QuestJournalApplication.QuestJournal;
 using QuestManagerApi.Controllers;
 using QuestManagerSharedResources.Model;
+using QuestManagerSharedResources.QuestSubObjects;
 using QuestProgressionManager.Managers;
 using System;
 using System.Collections;
@@ -13,7 +14,10 @@ using UnityEngine.UIElements;
 public class DbBindingManager : MonoBehaviour
 {
     [SerializeField]
-    VisualTreeAsset m_ItemAsset;
+    VisualTreeAsset m_QuestListItemAsset;
+
+    [SerializeField]
+    VisualTreeAsset m_MeasurementItemAsset;
 
     private ListView _questList;
     private VisualElement _questInfoPanel;
@@ -44,6 +48,8 @@ public class DbBindingManager : MonoBehaviour
 
         _questInfoPanel.Q<Label>("QuestName").text = quest.Name;
         _questInfoPanel.Q<ScrollView>("Description").contentContainer.Q<Label>("DescriptionBody").text = quest.Description;
+        
+        BindSubObjectList(_questInfoPanel.Q<ListView>("Measurements"), quest.QuestMeasurements);
     }
 
     private void BindQuestInfoPanelSelectionChangedEvent(IEnumerable<object> selectedItems)
@@ -59,13 +65,37 @@ public class DbBindingManager : MonoBehaviour
     {
         Action<VisualElement, int> bindItem = (e, i) => e.Q<Label>("QuestName").text = Quests[i].Name;
         var uiDocument = GetComponent<UIDocument>();
-        _questList.makeItem = m_ItemAsset.CloneTree;
+        _questList.makeItem = m_QuestListItemAsset.CloneTree;
         _questList.bindItem = bindItem;
         _questList.itemsSource = Quests;
         _questList.selectionChanged += Debug.Log;
 
         if (Constants.DbBindingSettings.RebuildUpdate)
             StartCoroutine("RebuildRoutine");
+    }
+
+    private void BindSubObjectList(ListView targetList, List<QuestMeasurement> bindvalue)
+    {
+        if (bindvalue == null)
+        {
+            targetList.itemsSource = null;
+            return;
+        }
+
+            Action<VisualElement, int> bindItem = (e, i) => BindMeasureItem(e, i, bindvalue);
+        targetList.makeItem = m_MeasurementItemAsset.CloneTree;
+        targetList.bindItem = bindItem;
+        targetList.itemsSource = bindvalue;
+        targetList.selectionChanged += Debug.Log;
+    }
+
+    private void BindMeasureItem(VisualElement element, int index, List<QuestMeasurement> bindvalue)
+    {
+        element.Q<Label>("MeasureName").text = bindvalue[index].Name;
+        element.Q<Label>("MeasureState").text = bindvalue[index].MeasurementReached ? "Completed":"InProgress";
+        element.Q<Label>("MeasureValue").text = bindvalue[index].Measurement;
+        element.Q<Label>("MeasureProgress").text = bindvalue[index].ProgressValue;
+        element.Q<Label>("MeasureTarget").text = bindvalue[index].TargetValue;
     }
 
     IEnumerator RebuildRoutine()

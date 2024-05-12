@@ -24,13 +24,13 @@ namespace SharedLibrary.Data.Configuration
 
             services.AddTransient<IWritableOptions<T>>(provider =>
             {
-                var environment = provider.GetService<IHostingEnvironment>();
+                var environment = provider.GetService<IHostEnvironment>();
                 var options = provider.GetService<IOptionsMonitor<T>>();
                 return new WritableOptions<T>(environment, options, section.Key, GetAppSettingsFileName(environment));
             });
         }
 
-        private static string GetAppSettingsFileName(IHostingEnvironment environment)
+        private static string GetAppSettingsFileName(IHostEnvironment environment)
         {
                 string environmentName = (environment != null) ? environment.EnvironmentName.ToLower() :
                         Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");

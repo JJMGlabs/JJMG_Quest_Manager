@@ -7,13 +7,13 @@ namespace SharedLibrary.Data.Configuration
 {
     public class WritableOptions<T> : IWritableOptions<T> where T : class, new()
     {
-        private readonly IHostingEnvironment _environment;
+        private readonly IHostEnvironment _environment;
         private readonly IOptionsMonitor<T> _options;
         private readonly string _section;
         private readonly string _file;
 
         public WritableOptions(
-            IHostingEnvironment environment,
+            IHostEnvironment environment,
             IOptionsMonitor<T> options,
             string section,
             string file)
@@ -29,18 +29,27 @@ namespace SharedLibrary.Data.Configuration
 
         public void Update(Action<T> applyChanges)
         {
-            var fileProvider = _environment.ContentRootFileProvider;
-            var fileInfo = fileProvider.GetFileInfo(_file);
-            var physicalPath = fileInfo.PhysicalPath;
+            var filePath = "";
+            if (_environment != null)
+            {
+                var fileProvider = _environment.ContentRootFileProvider;
+                var fileInfo = fileProvider.GetFileInfo(_file);
+                filePath = fileInfo.PhysicalPath;
+            }
+            else
+            {            
+                string startupPath = AppDomain.CurrentDomain.BaseDirectory;
+                filePath = Path.Combine(startupPath, _file);
+            }
 
-            var jObject = JsonConvert.DeserializeObject<JObject>(File.ReadAllText(physicalPath));
+            var jObject = JsonConvert.DeserializeObject<JObject>(File.ReadAllText(filePath));
             var sectionObject = jObject.TryGetValue(_section, out JToken section) ?
                 JsonConvert.DeserializeObject<T>(section.ToString()) : (Value ?? new T());
 
             applyChanges(sectionObject);
 
             jObject[_section] = JObject.Parse(JsonConvert.SerializeObject(sectionObject));
-            File.WriteAllText(physicalPath, JsonConvert.SerializeObject(jObject, Formatting.Indented));
+            File.WriteAllText(filePath, JsonConvert.SerializeObject(jObject, Formatting.Indented));
         }
     }
 }
