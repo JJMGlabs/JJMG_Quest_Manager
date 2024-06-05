@@ -79,10 +79,11 @@ public class DbBindingManager : MonoBehaviour
         if (bindvalue == null)
         {
             targetList.itemsSource = null;
+            targetList.style.display = DisplayStyle.None;
             return;
         }
-
-            Action<VisualElement, int> bindItem = (e, i) => BindMeasureItem(e, i, bindvalue);
+        targetList.style.display = DisplayStyle.Flex;
+        Action<VisualElement, int> bindItem = (e, i) => BindMeasureItem(e, i, bindvalue);
         targetList.makeItem = m_MeasurementItemAsset.CloneTree;
         targetList.bindItem = bindItem;
         targetList.itemsSource = bindvalue;
@@ -93,9 +94,9 @@ public class DbBindingManager : MonoBehaviour
     {
         element.Q<Label>("MeasureName").text = bindvalue[index].Name;
         element.Q<Label>("MeasureState").text = bindvalue[index].MeasurementReached ? "Completed":"InProgress";
-        element.Q<Label>("MeasureValue").text = bindvalue[index].Measurement;
-        element.Q<Label>("MeasureProgress").text = bindvalue[index].ProgressValue;
-        element.Q<Label>("MeasureTarget").text = bindvalue[index].TargetValue;
+        element.Q<Label>("MeasureValue").text = "Measuring: " + bindvalue[index].Measurement;
+        element.Q<Label>("MeasureProgress").text = "Progress: " + bindvalue[index].ProgressValue;
+        element.Q<Label>("MeasureTarget").text = "Target: " +bindvalue[index].TargetValue;
     }
 
     IEnumerator RebuildRoutine()

@@ -25,7 +25,30 @@ margin:1%
 -unity-background-image-tint-color:rgb(255, 255, 255);
 }
 
-.subObjectLstItmRow {
+/*.subObjectLstItmRow {
 flex-grow: 1; 
 flex-direction: row;
-}
+}*/
+
+        .subObjectLstItmRow {
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            padding-right:22;
+        }
+        .subObjectLstItmColumn {
+            flex-direction: column;
+            flex-grow: 1;
+        }
+        .leftColumn {
+            flex-grow: 1;
+        }
+        .rightColumn {
+            
+            justify-content: flex-start;
+            align-items: flex-start;
+        }
+        .rightInnerColumn {
+            flex-direction: row;
+            align-items: flex-start;
+        }
