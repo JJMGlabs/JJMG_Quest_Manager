@@ -69,7 +69,11 @@ namespace QuestProgressionManager.Managers
             var quests = GetAllCompleteQuests();
             var outputOutcomes = new List<QuestOutcome>();
             foreach (var quest in quests)
-                outputOutcomes.AddRange(quest.AcceptQuestOutcomes());
+            {
+                List<QuestOutcome> outcomes = quest.AcceptQuestOutcomes();
+                outputOutcomes.AddRange(outcomes);
+                outcomes.Where(o => o.DeliveryMetadata.ContainsKey(Constants.ReservedMeasurementKeys.OutcomeQuestKey)).ToList().ForEach(qo => UpdateInternalOutcome(qo));
+            }
             return outputOutcomes;
         }
 
@@ -113,7 +117,6 @@ namespace QuestProgressionManager.Managers
             {
                 if (quest.State == QuestState.ACTIVE)
                 {
-                    quest.QuestPrerequisites.Where(qp => qp.Metadata.ContainsKey(Constants.ReservedMeasurementKeys.PrerequisiteQuestKey)).ToList().ForEach(qp => UpdateInternalPrerequisite(qp));
 
                     if (quest.QuestPrerequisites.TrueForAll(qp => qp.isPrerequisiteMet || qp.isPrerequisiteCanceled))
                     {
@@ -127,12 +130,9 @@ namespace QuestProgressionManager.Managers
             }
         }
 
-        private void UpdateInternalPrerequisite(QuestPrerequisite prerequisite)
+        private void UpdateInternalOutcome(QuestOutcome outcome)
         {
-            if (prerequisite.isPrerequisiteMet || prerequisite.isPrerequisiteCanceled)
-                return;
-
-            var targetQuest = prerequisite.Metadata[Constants.ReservedMeasurementKeys.PrerequisiteQuestKey];
+            var targetQuest = outcome.DeliveryMetadata[Constants.ReservedMeasurementKeys.OutcomeQuestKey];
 
             if (string.IsNullOrEmpty(targetQuest))
                 return;
@@ -142,8 +142,10 @@ namespace QuestProgressionManager.Managers
             if (quest == null) return;
 
             if (quest.State == QuestState.COMPLETE)
-                prerequisite.isPrerequisiteMet = true;
+                outcome.Accepted = true;
 
+            if(quest.State != QuestState.CURRENT || quest.State != QuestState.ACTIVE)
+            quest.State = QuestState.ACTIVE;
         }
 
         private void MeasureQuestProgression(List<SubObjectUpdate> measurementUpdates)

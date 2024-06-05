@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 
 namespace QuestManagerSharedResources
@@ -20,8 +21,10 @@ namespace QuestManagerSharedResources
         }
         public static class ReservedMeasurementKeys
         {
-            //used to mark a quest id for a prerequisite
-            public static string PrerequisiteQuestKey = "Quest" + Prefix.QuestSubObjectIdPrefix.QuestPrerequisitePrefix;
+            //used to mark a quest id for an outcome
+            public static string OutcomeQuestKey = "Quest" + Prefix.QuestSubObjectIdPrefix.QuestPrerequisitePrefix;
+            //used to mark an outcome with a quest id as an questline
+            public static string IsQuestlineKey = "isQuestline";
         }
     }
 }
