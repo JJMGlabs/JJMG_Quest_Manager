@@ -21,23 +21,21 @@
 
         ChildComponent = (__builder) =>
         {
-    <div class="form-group">
-                            <label class="form-label">Canceleled</label>
-                            <input @bind="questPrequisite.isPrerequisiteCanceled" class="form-check" type="checkbox">
-    </div>
+            <div class="form-group">
+                <label class="form-label">Canceleled</label>
+                <input @bind="questPrequisite.isPrerequisiteCanceled" class="form-check" type="checkbox">
+            </div>
 
-    <div class="form-group">
-                            <label class="form-label">Has Been Met</label>
-                            <input @bind="questPrequisite.isPrerequisiteMet" class="form-check" type="checkbox">
-    </div>
-    <div class="form-group">
-                            <label class="form-label">Reveals Quest</label>
-                            <input @bind="questPrequisite.RevealsQuest" class="form-check" type="checkbox">
-    </div>
-    <DictionaryInput @bind-dictionary="@questPrequisite.Metadata" Label="Metadata" />
-    <p style="font-style:italic; font-weight:600;">Setting a Prequisite to require a quest will make the values below dormant</p>
-    <PrerequisiteQuestInput @bind-dictionary="@questPrequisite.Metadata" />
-            };
-            base.OnInitialized();
-        }
+            <div class="form-group">
+                <label class="form-label">Has Been Met</label>
+                <input @bind="questPrequisite.isPrerequisiteMet" class="form-check" type="checkbox">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Reveals Quest</label>
+                <input @bind="questPrequisite.RevealsQuest" class="form-check" type="checkbox">
+            </div>
+            <DictionaryInput @bind-dictionary="@questPrequisite.Metadata" Label="Metadata" />
+        };
+        base.OnInitialized();
+    }
     }

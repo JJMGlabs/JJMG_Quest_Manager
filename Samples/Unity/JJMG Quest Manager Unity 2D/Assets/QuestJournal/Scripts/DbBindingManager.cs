@@ -18,6 +18,10 @@ public class DbBindingManager : MonoBehaviour
 
     [SerializeField]
     VisualTreeAsset m_MeasurementItemAsset;
+    [SerializeField]
+    VisualTreeAsset m_OutcomeItemAsset;
+    [SerializeField]
+    VisualTreeAsset m_PrereqItemAsset;
 
     private ListView _questList;
     private VisualElement _questInfoPanel;
@@ -50,6 +54,7 @@ public class DbBindingManager : MonoBehaviour
         _questInfoPanel.Q<ScrollView>("Description").contentContainer.Q<Label>("DescriptionBody").text = quest.Description;
         
         BindSubObjectList(_questInfoPanel.Q<ListView>("Measurements"), quest.QuestMeasurements);
+        BindSubObjectList(_questInfoPanel.Q<ListView>("Outcomes"), quest.QuestOutcomes);
     }
 
     private void BindQuestInfoPanelSelectionChangedEvent(IEnumerable<object> selectedItems)
@@ -74,7 +79,22 @@ public class DbBindingManager : MonoBehaviour
             StartCoroutine("RebuildRoutine");
     }
 
-    private void BindSubObjectList(ListView targetList, List<QuestMeasurement> bindvalue)
+    //private void BindSubObjectList(ListView targetList, List<QuestMeasurement> bindvalue)
+    //{
+    //    if (bindvalue == null)
+    //    {
+    //        targetList.itemsSource = null;
+    //        targetList.style.display = DisplayStyle.None;
+    //        return;
+    //    }
+    //    targetList.style.display = DisplayStyle.Flex;
+    //    Action<VisualElement, int> bindItem = (e, i) => BindMeasureItem(e, i, bindvalue);
+    //    targetList.makeItem = m_MeasurementItemAsset.CloneTree;
+    //    targetList.bindItem = bindItem;
+    //    targetList.itemsSource = bindvalue;
+    //    targetList.selectionChanged += Debug.Log;
+    //}
+    private void BindSubObjectList<T>(ListView targetList, List<T> bindvalue)
     {
         if (bindvalue == null)
         {
@@ -82,11 +102,34 @@ public class DbBindingManager : MonoBehaviour
             targetList.style.display = DisplayStyle.None;
             return;
         }
+
         targetList.style.display = DisplayStyle.Flex;
-        Action<VisualElement, int> bindItem = (e, i) => BindMeasureItem(e, i, bindvalue);
-        targetList.makeItem = m_MeasurementItemAsset.CloneTree;
+
+        Action<VisualElement, int> bindItem;
+
+        if (typeof(T) == typeof(QuestMeasurement))
+        {
+            bindItem = (e, i) => BindMeasureItem(e, i, bindvalue as List<QuestMeasurement>);
+            targetList.makeItem = m_MeasurementItemAsset.CloneTree;
+        }
+        else if (typeof(T) == typeof(QuestOutcome))
+        {
+            bindItem = (e, i) => BindOutcomeItem(e, i, bindvalue as List<QuestOutcome>);
+            targetList.makeItem = m_OutcomeItemAsset.CloneTree;
+        }
+        else if (typeof(T) == typeof(QuestPrerequisite))
+        {
+            bindItem = (e, i) => BindPrerequisiteItem(e, i, bindvalue as List<QuestPrerequisite>);
+            targetList.makeItem = m_PrereqItemAsset.CloneTree;
+        }
+        else
+            return;
+
+
+        
         targetList.bindItem = bindItem;
         targetList.itemsSource = bindvalue;
+        targetList.selectionChanged -= Debug.Log;  // Prevent multiple subscriptions
         targetList.selectionChanged += Debug.Log;
     }
 
@@ -97,6 +140,26 @@ public class DbBindingManager : MonoBehaviour
         element.Q<Label>("MeasureValue").text = "Measuring: " + bindvalue[index].Measurement;
         element.Q<Label>("MeasureProgress").text = "Progress: " + bindvalue[index].ProgressValue;
         element.Q<Label>("MeasureTarget").text = "Target: " +bindvalue[index].TargetValue;
+    }
+
+    private void BindPrerequisiteItem(VisualElement element, int index, List<QuestPrerequisite> bindvalue)
+    {
+        element.Q<Label>("MeasureName").text = bindvalue[index].Name;
+        var Status = "Prerequisite has ";
+        Status += bindvalue[index].isPrerequisiteMet ? "been met" : "is not met";
+        Status += bindvalue[index].isPrerequisiteCanceled ? " but is canceled" : "";
+        element.Q<Label>("Status").text = Status;
+        element.Q<Label>("MeasureValue").text = "Measuring: " + bindvalue[index].Measurement;
+        element.Q<Label>("MeasureProgress").text = "Progress: " + bindvalue[index].ProgressValue;
+        element.Q<Label>("MeasureTarget").text = "Target: " + bindvalue[index].TargetValue;
+    }
+
+    private void BindOutcomeItem(VisualElement element, int index, List<QuestOutcome> bindvalue)
+    {
+        element.Q<Label>("OutcomeName").text = bindvalue[index].Name;
+        element.Q<Label>("Accepted").text = bindvalue[index].Accepted ? "Accepted" : "Available";
+        element.Q<Label>("Repeats").text = bindvalue[index].RepeatOutcome ? "Repeating" : "";
+        element.Q<Label>("MeasurementDependancies").text = "Measuring: " + bindvalue[index].MeasurementDependancyIds[0];
     }
 
     IEnumerator RebuildRoutine()

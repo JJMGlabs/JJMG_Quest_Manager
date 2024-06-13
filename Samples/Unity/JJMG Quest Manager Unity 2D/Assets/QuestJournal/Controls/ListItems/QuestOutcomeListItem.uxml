@@ -4,19 +4,16 @@
     </ui:Style>
     <ui:VisualElement class="subObjectLstItmRow">
         <ui:VisualElement class="leftColumn">
-            <ui:Label tabindex="-1" name="MeasureName" parse-escape-sequences="true" display-tooltip-when-elided="true" />
+            <ui:Label tabindex="-1" name="OutcomeName" parse-escape-sequences="true" display-tooltip-when-elided="true" />
         </ui:VisualElement>
-        <ui:VisualElement class="rightColumn">
-            <ui:Label tabindex="-1" name="MeasureState" parse-escape-sequences="true" display-tooltip-when-elided="true" />
+        <ui:VisualElement class="rightColumn rightInnerColumn">
+            <ui:Label tabindex="-1" name="Accepted" parse-escape-sequences="true" display-tooltip-when-elided="true" />
+            <ui:Label tabindex="-1" name="Repeats" parse-escape-sequences="true" display-tooltip-when-elided="true" />
         </ui:VisualElement>
     </ui:VisualElement>
     <ui:VisualElement class="subObjectLstItmRow">
         <ui:VisualElement class="leftColumn">
-            <ui:Label tabindex="-1" name="MeasureValue" parse-escape-sequences="true" display-tooltip-when-elided="true" />
-        </ui:VisualElement>
-        <ui:VisualElement class="rightColumn rightInnerColumn">
-            <ui:Label tabindex="-1" name="MeasureProgress" parse-escape-sequences="true" display-tooltip-when-elided="true" />
-            <ui:Label tabindex="-1" name="MeasureTarget" parse-escape-sequences="true" display-tooltip-when-elided="true" />
+            <ui:Label tabindex="-1" name="MeasurementDependancies" parse-escape-sequences="true" display-tooltip-when-elided="true" />
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

@@ -6,5 +6,6 @@
         </ui:ScrollView>
         <ui:ListView focusable="true" name="Metadata" />
         <ui:ListView  header-title="Measurements" virtualization-method="DynamicHeight" show-foldout-header="true" focusable="true" name="Measurements" show-bound-collection-size="false" />
+        <ui:ListView  header-title="Outcomes" virtualization-method="DynamicHeight" show-foldout-header="true" focusable="true" name="Outcomes" show-bound-collection-size="false" />
     </ui:VisualElement>
 </ui:UXML>
