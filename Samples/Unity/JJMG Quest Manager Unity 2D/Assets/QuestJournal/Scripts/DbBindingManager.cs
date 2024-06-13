@@ -52,7 +52,8 @@ public class DbBindingManager : MonoBehaviour
 
         _questInfoPanel.Q<Label>("QuestName").text = quest.Name;
         _questInfoPanel.Q<ScrollView>("Description").contentContainer.Q<Label>("DescriptionBody").text = quest.Description;
-        
+
+        BindSubObjectList(_questInfoPanel.Q<ListView>("Prerequisites"), quest.QuestPrerequisites);
         BindSubObjectList(_questInfoPanel.Q<ListView>("Measurements"), quest.QuestMeasurements);
         BindSubObjectList(_questInfoPanel.Q<ListView>("Outcomes"), quest.QuestOutcomes);
     }
@@ -79,24 +80,9 @@ public class DbBindingManager : MonoBehaviour
             StartCoroutine("RebuildRoutine");
     }
 
-    //private void BindSubObjectList(ListView targetList, List<QuestMeasurement> bindvalue)
-    //{
-    //    if (bindvalue == null)
-    //    {
-    //        targetList.itemsSource = null;
-    //        targetList.style.display = DisplayStyle.None;
-    //        return;
-    //    }
-    //    targetList.style.display = DisplayStyle.Flex;
-    //    Action<VisualElement, int> bindItem = (e, i) => BindMeasureItem(e, i, bindvalue);
-    //    targetList.makeItem = m_MeasurementItemAsset.CloneTree;
-    //    targetList.bindItem = bindItem;
-    //    targetList.itemsSource = bindvalue;
-    //    targetList.selectionChanged += Debug.Log;
-    //}
     private void BindSubObjectList<T>(ListView targetList, List<T> bindvalue)
     {
-        if (bindvalue == null)
+        if (bindvalue == null || bindvalue.Count == 0)
         {
             targetList.itemsSource = null;
             targetList.style.display = DisplayStyle.None;
@@ -125,8 +111,6 @@ public class DbBindingManager : MonoBehaviour
         else
             return;
 
-
-        
         targetList.bindItem = bindItem;
         targetList.itemsSource = bindvalue;
         targetList.selectionChanged -= Debug.Log;  // Prevent multiple subscriptions
@@ -136,15 +120,15 @@ public class DbBindingManager : MonoBehaviour
     private void BindMeasureItem(VisualElement element, int index, List<QuestMeasurement> bindvalue)
     {
         element.Q<Label>("MeasureName").text = bindvalue[index].Name;
-        element.Q<Label>("MeasureState").text = bindvalue[index].MeasurementReached ? "Completed":"InProgress";
+        element.Q<Label>("MeasureState").text = bindvalue[index].MeasurementReached ? "Completed" : "InProgress";
         element.Q<Label>("MeasureValue").text = "Measuring: " + bindvalue[index].Measurement;
         element.Q<Label>("MeasureProgress").text = "Progress: " + bindvalue[index].ProgressValue;
-        element.Q<Label>("MeasureTarget").text = "Target: " +bindvalue[index].TargetValue;
+        element.Q<Label>("MeasureTarget").text = "Target: " + bindvalue[index].TargetValue;
     }
 
     private void BindPrerequisiteItem(VisualElement element, int index, List<QuestPrerequisite> bindvalue)
     {
-        element.Q<Label>("MeasureName").text = bindvalue[index].Name;
+        element.Q<Label>("Name").text = bindvalue[index].Name;
         var Status = "Prerequisite has ";
         Status += bindvalue[index].isPrerequisiteMet ? "been met" : "is not met";
         Status += bindvalue[index].isPrerequisiteCanceled ? " but is canceled" : "";
@@ -159,12 +143,17 @@ public class DbBindingManager : MonoBehaviour
         element.Q<Label>("OutcomeName").text = bindvalue[index].Name;
         element.Q<Label>("Accepted").text = bindvalue[index].Accepted ? "Accepted" : "Available";
         element.Q<Label>("Repeats").text = bindvalue[index].RepeatOutcome ? "Repeating" : "";
-        element.Q<Label>("MeasurementDependancies").text = "Measuring: " + bindvalue[index].MeasurementDependancyIds[0];
+
+        string measurementIds = bindvalue[index].MeasurementDependancyIds.Count > 0
+    ? "Measuring: " + string.Join(", ", bindvalue[index].MeasurementDependancyIds)
+    : "";
+
+        element.Q<Label>("MeasurementDependancies").text = measurementIds;
     }
 
     IEnumerator RebuildRoutine()
     {
-        for (; ;)
+        for (; ; )
         {
             if (_questList != null)
                 _questList.Rebuild();

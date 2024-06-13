@@ -5,6 +5,7 @@
             <ui:Label tabindex="-1" text="Label" parse-escape-sequences="true" display-tooltip-when-elided="true" name="DescriptionBody" />
         </ui:ScrollView>
         <ui:ListView focusable="true" name="Metadata" />
+        <ui:ListView  header-title="Prerequisites" virtualization-method="DynamicHeight" show-foldout-header="true" focusable="true" name="Prerequisites" show-bound-collection-size="false" />
         <ui:ListView  header-title="Measurements" virtualization-method="DynamicHeight" show-foldout-header="true" focusable="true" name="Measurements" show-bound-collection-size="false" />
         <ui:ListView  header-title="Outcomes" virtualization-method="DynamicHeight" show-foldout-header="true" focusable="true" name="Outcomes" show-bound-collection-size="false" />
     </ui:VisualElement>
