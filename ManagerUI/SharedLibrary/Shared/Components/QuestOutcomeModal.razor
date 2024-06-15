@@ -61,7 +61,8 @@
 
             </div>
             <DictionaryInput @bind-dictionary="@questOutcome.DeliveryMetadata" Label="Delivery Metadata" />
-
+            <p style="font-style:italic; font-weight:600;">Setting an Outcome to deliver a quest will make the values below dormant</p>
+            <OutcomeQuestInput @bind-dictionary="@questOutcome.DeliveryMetadata" />
         };
         base.OnInitialized();
     }
@@ -102,18 +103,15 @@
             measureListBinding.Add(new ListBinding(i, questOutcome.MeasurementDependancyIds[i]));
     }
 
-
-
     string GameEventIdToAdd;
 
-
-        private List<ListBinding> gameEventListBinding = new List<ListBinding>();
+    private List<ListBinding> gameEventListBinding = new List<ListBinding>();
 
     void AddGameEventId()
     {
         if (!string.IsNullOrWhiteSpace(GameEventIdToAdd))
         {
-questOutcome.GameEventDependancyIds.Add(GameEventIdToAdd);
+            questOutcome.GameEventDependancyIds.Add(GameEventIdToAdd);
             GameEventIdToAdd = string.Empty;
             GameEventIdListBindings();
         }
@@ -121,7 +119,7 @@ questOutcome.GameEventDependancyIds.Add(GameEventIdToAdd);
 
     void UpdateGameEventId(int index, string id)
     {
-questOutcome.GameEventDependancyIds[index] = id;
+        questOutcome.GameEventDependancyIds[index] = id;
         GameEventIdListBindings();
     }
 

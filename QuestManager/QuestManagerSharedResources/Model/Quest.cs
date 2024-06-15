@@ -1,4 +1,5 @@
-﻿using QuestManager.Utility;
+﻿using Newtonsoft.Json;
+using QuestManager.Utility;
 using QuestManagerSharedResources.Model.Enums;
 using QuestManagerSharedResources.QuestSubObjects;
 using System;
@@ -38,6 +39,23 @@ namespace QuestManagerSharedResources.Model
 
         public Quest()
         {
+        }
+
+        [JsonConstructor]
+        public Quest(string id, string name, string description, QuestState state, QuestPriority questPriority, bool playerVisible, bool tracked, bool repeatable, List<QuestMeasurement> questMeasurements, List<QuestOutcome> questOutcomes, List<QuestPrerequisite> questPrerequisites, List<Quest> repeats)
+        {
+            Id = id;
+            Name = name;
+            Description = description;
+            State = state;
+            QuestPriority = questPriority;
+            PlayerVisible = playerVisible;
+            Tracked = tracked;
+            Repeatable = repeatable;
+            _questMeasurements = questMeasurements;
+            _questOutcomes = questOutcomes;
+            _questPrerequisites = questPrerequisites;
+            this.repeats = repeats;
         }
 
         public void OverwriteData(Quest overwriteData)

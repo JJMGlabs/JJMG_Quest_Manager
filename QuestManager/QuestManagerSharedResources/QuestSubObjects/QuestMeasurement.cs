@@ -24,11 +24,6 @@ namespace QuestManagerSharedResources.QuestSubObjects
             MeasurementReached = QuestSubObjectComparisonUtility.PerformComparison(ProgressValue, Comparator, TargetValue);
         }
 
-        public virtual void ClearMeasurement()
-        {
-            MeasurementFailed = false;
-        }
-
         internal void SetForRepeat()
         {
             MeasurementReached = false;

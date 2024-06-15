@@ -219,7 +219,7 @@
     </div>
     <div style="padding-top:50px">
         <button type="button" class="btn btn-secondary" @onclick=@CloseForm>Cancel</button>
-        <button type="button" class="btn btn-primary" @onclick=@CloseForm>Ok</button>
+        <button type="button" class="btn btn-primary" @onclick=@SaveAndClose>Save</button>
     </div>
 </div>
 
@@ -266,6 +266,8 @@
             QuestDbConnection.UpdateQuest(DialogTargetQuest);
         else
             QuestDbConnection.CreateQuest(DialogTargetQuest);
+
+            QuestDbConnection.SaveQuestDbChanges();
         CloseForm();
     }
 

@@ -9,10 +9,12 @@
 
   <ItemGroup>
     <None Remove="Pages\QuestForm.razor.css" />
+    <None Remove="Pages\SettingsPage.razor.css" />
   </ItemGroup>
 
   <ItemGroup>
     <Content Include="Pages\QuestForm.razor.css" />
+    <Content Include="Pages\SettingsPage.razor.css" />
   </ItemGroup>
 
   <ItemGroup>

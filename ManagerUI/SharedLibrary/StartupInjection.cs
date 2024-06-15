@@ -2,21 +2,17 @@
 using Microsoft.Extensions.DependencyInjection;
 using QuestManager.Configuration;
 using QuestManager.Managers;
+using SharedLibrary.Data.Configuration;
 
 namespace SharedLibrary
 {
     public static class StartupInjection
     {
-        public static void AddSharedLibrary(this IServiceCollection services)
+        public static void AddSharedLibrary(this IServiceCollection services, ConfigurationManager configuration)
         {
-            services.AddOptions<DbConnectionOptions>()
-                .Configure<IConfiguration>(
-                (options, configuration) =>
-                configuration.GetSection(Constants.QuestDbConfigurationSection).Bind(options));
+            services.ConfigureWritable<DbConnectionOptions>(configuration.GetSection(Constants.QuestDbConfigurationSection));
 
-
-
-            services.AddSingleton<IQuestDbConnection, QuestDbConnection>();
+            services.AddScoped<IQuestDbConnection, QuestDbConnection>();
         }
     }
 }

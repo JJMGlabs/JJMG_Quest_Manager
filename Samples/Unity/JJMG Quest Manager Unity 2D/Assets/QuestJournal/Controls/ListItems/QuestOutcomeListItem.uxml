@@ -1,0 +1,19 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <ui:Style>
+
+    </ui:Style>
+    <ui:VisualElement class="subObjectLstItmRow">
+        <ui:VisualElement class="leftColumn">
+            <ui:Label tabindex="-1" name="OutcomeName" parse-escape-sequences="true" display-tooltip-when-elided="true" />
+        </ui:VisualElement>
+        <ui:VisualElement class="rightColumn rightInnerColumn">
+            <ui:Label tabindex="-1" name="Accepted" parse-escape-sequences="true" display-tooltip-when-elided="true" />
+            <ui:Label tabindex="-1" name="Repeats" parse-escape-sequences="true" display-tooltip-when-elided="true" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+    <ui:VisualElement class="subObjectLstItmRow">
+        <ui:VisualElement class="leftColumn">
+            <ui:Label tabindex="-1" name="MeasurementDependancies" parse-escape-sequences="true" display-tooltip-when-elided="true" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
