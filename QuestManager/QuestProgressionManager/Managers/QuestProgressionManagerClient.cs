@@ -6,6 +6,7 @@ using QuestManagerSharedResources.Model;
 using QuestManagerSharedResources.Model.Enums;
 using QuestManagerSharedResources.Model.Utility;
 using QuestManagerSharedResources.QuestSubObjects;
+using QuestProgressionManager.Managers.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -14,7 +15,7 @@ using System.Threading;
 
 namespace QuestProgressionManager.Managers
 {
-    public class QuestProgressionManagerClient
+    public class QuestProgressionManagerClient : IQuestProgressionManagerClient
     {
         private string basePath;
         private List<Quest> _playerQuestData;
@@ -144,8 +145,8 @@ namespace QuestProgressionManager.Managers
             if (quest.State == QuestState.COMPLETE)
                 outcome.Accepted = true;
 
-            if(quest.State != QuestState.CURRENT || quest.State != QuestState.ACTIVE)
-            quest.State = QuestState.ACTIVE;
+            if (quest.State != QuestState.CURRENT || quest.State != QuestState.ACTIVE)
+                quest.State = QuestState.ACTIVE;
         }
 
         private void MeasureQuestProgression(List<SubObjectUpdate> measurementUpdates)
@@ -183,7 +184,7 @@ namespace QuestProgressionManager.Managers
         {
             _playerQuestData = new List<Quest>();
 
-            
+
             if (_playerQuestData == null)
             {
                 _waitHandle.WaitOne();

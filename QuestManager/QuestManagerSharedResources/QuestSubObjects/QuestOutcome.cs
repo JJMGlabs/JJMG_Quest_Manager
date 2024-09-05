@@ -22,5 +22,27 @@ namespace QuestManagerSharedResources.QuestSubObjects
         //Has the quest been accepted by the app
         public bool Accepted { get; set; }
         public bool RepeatOutcome { get; set; }
+        public bool isQuestlineOutcome()
+        {
+            if (DeliveryMetadata == null || DeliveryMetadata.Count == 0)
+                return false;
+
+            if (DeliveryMetadata.TryGetValue(Constants.ReservedMeasurementKeys.IsQuestlineKey, out string isQuestlineValue))
+                if (bool.TryParse(isQuestlineValue, out bool isQuestline))
+                    return isQuestline;
+
+            return false;
+        }
+
+        public string getQuestOutcome()
+        {
+            if (DeliveryMetadata == null || DeliveryMetadata.Count == 0)
+                return string.Empty;
+
+            if (DeliveryMetadata.TryGetValue(Constants.ReservedMeasurementKeys.OutcomeQuestKey, out string questOutcome))
+                return questOutcome;
+
+            return string.Empty;
+        }
     }
 }

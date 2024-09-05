@@ -23,7 +23,7 @@ namespace QuestManagerSharedResources
         {
             //used to mark a quest id for an outcome
             public static string OutcomeQuestKey = "Quest" + Prefix.QuestSubObjectIdPrefix.QuestPrerequisitePrefix;
-            //used to mark an outcome with a quest id as an questline
+            //used to mark an outcome with a quest id as a questline rather than just a quest received
             public static string IsQuestlineKey = "isQuestline";
         }
     }

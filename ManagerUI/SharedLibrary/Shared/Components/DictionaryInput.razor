@@ -10,10 +10,13 @@
 <ul>
     @foreach (var item in dictionary)
     {
-        <li>
-            @item.Key: @item.Value
+        @if (item.Key != QuestManagerSharedResources.Constants.ReservedMeasurementKeys.OutcomeQuestKey)
+        {
+            <li>
+                @item.Key : @item.Value
             <button class="btn btn-danger" @onclick="() => RemoveItem(item.Key)">Remove</button>
         </li>
+        }
     }
 </ul>
 
