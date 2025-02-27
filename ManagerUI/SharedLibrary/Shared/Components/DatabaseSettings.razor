@@ -1,0 +1,179 @@
+﻿@typeparam TOptions where TOptions : DbConnectionOptions, new()
+
+@using Microsoft.Extensions.Configuration
+@using Microsoft.Extensions.Options
+@using QuestManager.Configuration
+@using System.Text.RegularExpressions
+@using SharedLibrary.Data.Configuration
+
+<div>
+    @if (Options != null)
+    {
+
+        <hr class="solid">
+        <div class="settingContainer">
+            <div class="settingDetailContainer">
+                <label class="settingDetailHeader">Folder</label>
+                <label class="settingDetailDescription">Folder path where your database is located</label>
+            </div>
+            <div class="settingControlContainer">
+                @if (invalidFolderPath)
+                {
+                    <label class="errorLabel">Invalid folder path, folder does not exist!</label>
+                }
+                <input class="form-control input-textbox" type="text" value="@folderPath" @onchange="ValidateFolderPath">
+            </div>
+        </div>
+
+        <div class="settingContainer">
+            <div class="settingDetailContainer">
+                <label class="settingDetailHeader">File Name</label>
+                <label class="settingDetailDescription">The name your json database file will have</label>
+            </div>
+            <div class="settingControlContainer">
+                @if (invalidFileName)
+                {
+                    <label class="errorLabel">Invalid file name!</label>
+                }
+                <input class="form-control input-textbox" type="text" value="@fileName" @onchange="ValidateFileName">
+            </div>
+        </div>
+
+        <div class="settingContainer">
+            <div class="settingDetailContainer">
+                <label class="settingDetailHeader">File Path To Database:</label>
+            </div>
+            <div class="settingControlContainer">
+                <label>@fullFolderPath()</label>
+            </div>
+        </div>
+
+        <div class="settingContainer">
+            <div class="settingDetailContainer">
+                <label class="settingDetailHeader">Delimiter</label>
+                <label class="settingDetailDescription">If filled the value here will surround your data rather than replace all text in the file</label>
+            </div>
+            <div class="settingControlContainer">
+                @if (invalidFolderPath)
+                {
+                    <label class="errorLabel">Invalid folder path, folder does not exist!</label>
+                }
+                <input class="form-control input-textbox" type="text" @bind=delimiter>
+            </div>
+        </div>
+
+        <div style="padding-top:20px">
+            @if (!ValidInput)
+            {
+                <label class="errorLabel">Cannot save settings with invalid input</label>
+            }
+            @if (invalidSaveAttempt)
+            {
+                <label class="errorLabel">Cannot save settings without a folder and file specified</label>
+            }
+        </div>
+    }
+    else
+    {
+        <label>No existing configuration section create one and reload the application</label>
+    }
+</div>
+
+@code {
+    [CascadingParameter] public IOptions<TOptions> Options { get; set; }
+    [CascadingParameter] public IWritableOptions<TOptions> WritableOptions { get; set; }
+
+    @inject NavigationManager navManager;
+
+    //DatabaseConnection Validation
+    bool invalidFolderPath;
+    bool invalidFileName;
+    bool invalidSaveAttempt;
+
+    //DatabaseConnection Settings
+    string folderPath { get; set; }
+    string fileName { get; set; }
+    string delimiter { get; set; }
+
+    public string storedFileName() => string.Format(@"\{0}.json", fileName);
+
+    string fullFolderPath() => folderPath + storedFileName();
+
+    private bool ValidInput => !invalidFolderPath && !invalidFileName;
+
+    public bool ValidationFailed => !ValidInput || !RequiredDataPresent();
+
+    protected override void OnInitialized()
+    {
+        var questDbOptions = Options as IOptions<TOptions>;
+        if (questDbOptions != null)
+        {
+            folderPath = questDbOptions.Value.BasePath + questDbOptions.Value.DbName;
+            if (!string.IsNullOrEmpty(questDbOptions.Value.CollectionName))
+            {
+                fileName = questDbOptions.Value.CollectionName.Remove(0, 1);
+                fileName = fileName.Replace(".json", "");
+            }
+            delimiter = questDbOptions.Value.RootObject;
+        }
+        base.OnInitialized();
+    }
+
+    private void ValidateFolderPath(ChangeEventArgs args)
+    {
+        invalidSaveAttempt = false;
+        var value = (string)args.Value;
+
+        invalidFolderPath = string.IsNullOrEmpty(value) || !System.IO.Directory.Exists(value);
+
+        folderPath = value;
+    }
+
+    private void ValidateFileName(ChangeEventArgs args)
+    {
+        invalidSaveAttempt = false;
+        var value = (string)args.Value;
+
+        string invalidFileNameChars = new string(System.IO.Path.GetInvalidFileNameChars()) + '.';
+        Regex invalidFileNameRegex = new Regex("[" + Regex.Escape(invalidFileNameChars) + "]");
+
+        invalidFileName = string.IsNullOrEmpty(value) || invalidFileNameRegex.IsMatch(value);
+
+        fileName = value;
+    }
+
+    public bool RequiredDataPresent()
+    {
+        if (!string.IsNullOrEmpty(folderPath) && !string.IsNullOrEmpty(fileName))
+            return true;
+
+        invalidSaveAttempt = true;
+        StateHasChanged();
+        return false;
+    }
+
+    public void SaveSettings()
+    {
+        if (ValidationFailed)
+            return;
+
+        var index = folderPath.LastIndexOf('\\');
+
+        var questDbOptions = Options as IOptions<TOptions>;
+        if (questDbOptions != null)
+        {
+            questDbOptions.Value.DbName = folderPath.Substring(index);
+            questDbOptions.Value.BasePath = folderPath.Remove(index);
+            questDbOptions.Value.CollectionName = storedFileName();
+            questDbOptions.Value.RootObject = delimiter;
+
+            WritableOptions.Update(opt =>
+            {
+                opt.DbName = folderPath.Substring(index);
+                opt.BasePath = folderPath.Remove(index);
+                opt.CollectionName = storedFileName();
+                opt.RootObject = delimiter;
+            });
+        }
+    }
+}

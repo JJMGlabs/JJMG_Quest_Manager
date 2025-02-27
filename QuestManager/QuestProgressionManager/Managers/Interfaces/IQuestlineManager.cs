@@ -8,15 +8,14 @@ namespace QuestProgressionManager.Managers.Interfaces
     /// </summary>
     public interface IQuestlineManager
     {
-        List<List<Quest>> GetQuestline(Quest quest);
-        List<List<Quest>> GetQuestline(string questId);
-        List<Quest> GetNextQuestInQuestline(Quest quest);
-        List<Quest> GetNextQuestInQuestline(string questId);
-        List<Quest> GetPreviousQuestInQuestline(Quest quest);
-        List<Quest> GetPreviousQuestInQuestline(string questId);
-        List<List<Quest>> GetRemainingQuestsInQuestline(Quest quest);
-        List<List<Quest>> GetRemainingQuestsInQuestline(string questId);
-        List<List<Quest>> GetPreviousQuestsInQuestline(Quest quest);
-        List<List<Quest>> GetPreviousQuestsInQuestline(string questId);
+        List<List<Quest>> GetQuestline(string questlineId);
+        List<Quest> GetNextQuestInQuestline(Quest quest, string questlineId);
+        List<Quest> GetNextQuestInQuestline(string questId, string questlineId);
+        List<Quest> GetPreviousQuestInQuestline(Quest quest, string questlineId, bool hasBeenCompleted);
+        List<Quest> GetPreviousQuestInQuestline(string questId, string questlineId, bool hasBeenCompleted);
+        List<List<Quest>> GetRemainingQuestsInQuestline(Quest quest, string questlineId);
+        List<List<Quest>> GetRemainingQuestsInQuestline(string questId, string questlineId);
+        List<List<Quest>> GetPreviousQuestsInQuestline(Quest quest, string questlineId, bool hasBeenCompleted);
+        List<List<Quest>> GetPreviousQuestsInQuestline(string questId, string questlineId, bool hasBeenCompleted);        
     }
 }

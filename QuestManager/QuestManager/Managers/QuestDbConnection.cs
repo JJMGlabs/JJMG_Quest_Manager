@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using QuestManager.Configuration;
+using QuestManager.Managers.Interfaces;
 using QuestManager.Utility;
 using QuestManagerSharedResources;
 using QuestManagerSharedResources.Model;
@@ -8,23 +9,21 @@ using QuestManagerSharedResources.Model.Utility;
 using QuestManagerSharedResources.Utility;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Threading;
 
 namespace QuestManager.Managers
 {
     /// <summary>
-    /// This class is responsible for connecting to a JSON file that holds quest data. 
+    /// This class is responsible for connecting to a JSON file db that holds quest data. 
     /// </summary>
     public class QuestDbConnection : IQuestDbConnection
     {
         private readonly string fullPath;
         private List<Quest> _allQuests;
-        EventWaitHandle _waitHandle;
         DbConnectionOptions _options;
+        FileBasedDbConnectionUtility _db;
 
-        public QuestDbConnection(IOptions<DbConnectionOptions> dbConnectionOptions)
+        public QuestDbConnection(IOptions<QuestDbConnectionOptions> dbConnectionOptions)
         {
             _options = dbConnectionOptions.Value;
 
@@ -33,11 +32,12 @@ namespace QuestManager.Managers
                 _options.BasePath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.Create);
 
             fullPath = _options.BasePath + _options.DbName + _options.CollectionName;
-             _waitHandle = new EventWaitHandle(true, EventResetMode.AutoReset, "questManagerWaitFileAccess");
+            _db = new FileBasedDbConnectionUtility(Constants.UtilityValues.WaitHandleForQuestDb);
         }
 
         public ResponseStatus SaveQuestDbChanges()
         {
+            //TODO modify this to write to the file a the same data surrounded by _rootobject as a delimiter 
             var questsToSave = JsonConvert.SerializeObject(GetAllQuests(), new JsonSerializerSettings
             {
                 ContractResolver = new JsonReadOnlyPropertiesResolver()
@@ -45,25 +45,14 @@ namespace QuestManager.Managers
 
             SaveDbBackup();
 
-            _waitHandle.WaitOne();
-            File.WriteAllText(fullPath, questsToSave);
-            _waitHandle.Set();
+            _db.WriteListDataToFile(fullPath, GetAllQuests(),_options.RootObject);
 
             return new ResponseStatus(true, "Successfully wrote quest data to data store");
         }
 
         public ResponseStatus SaveDbBackup()
         {
-            _waitHandle.WaitOne();
-            if (!File.Exists(fullPath))
-            {
-                _waitHandle.Set();
-                //fine for a json db but not expected in hosted db
-                return new ResponseStatus(true, "No data to backup");
-            }
-
-            File.Copy(fullPath, fullPath.Replace(".json","Old.json"), true);
-            _waitHandle.Set();
+            _db.BackupDB(fullPath,_options.RootObject);
 
             return new ResponseStatus(true, "Successfully backed up quest data");
         }
@@ -72,17 +61,8 @@ namespace QuestManager.Managers
         {
             if (_allQuests == null)
             {
-                _waitHandle.WaitOne();
-                if (!File.Exists(fullPath))
-                {
-                    Directory.CreateDirectory(Path.GetDirectoryName(fullPath));
-                    var createdDb = File.Create(fullPath);
-                    createdDb.Close();
-                }
-
-                var readFile = File.ReadAllText(fullPath);
-                var quests = JsonConvert.DeserializeObject<List<Quest>>(readFile);
-                _waitHandle.Set();
+                List<Quest> quests = new List<Quest>();
+                quests = _db.GetListOfDataFromFile<Quest>(fullPath, _options.RootObject);
                 _allQuests = quests != null ? quests : new List<Quest>();
             }
 

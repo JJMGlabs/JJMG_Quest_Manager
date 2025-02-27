@@ -15,7 +15,7 @@ namespace QuestManager.Managers.Tests
     {
         private static QuestDbConnection ArrangeConnection()
         {
-            var dbOptions = new DbConnectionOptionsBuilder()
+            var dbOptions = new QuestDbConnectionOptionsBuilder()
                 .SetConnectionBasePath(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.Create))
                 .SetDbName(@"\JJMGquestManager")
                 .SetCollectionName(@"\questDb.json")

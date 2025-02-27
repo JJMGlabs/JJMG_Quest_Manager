@@ -27,14 +27,17 @@ namespace QuestManagerSharedResources.QuestSubObjects
             if (DeliveryMetadata == null || DeliveryMetadata.Count == 0)
                 return false;
 
-            if (DeliveryMetadata.TryGetValue(Constants.ReservedMeasurementKeys.IsQuestlineKey, out string isQuestlineValue))
-                if (bool.TryParse(isQuestlineValue, out bool isQuestline))
-                    return isQuestline;
+            if (DeliveryMetadata.TryGetValue(Constants.ReservedMeasurementKeys.QuestlineIdKey, out string questlineValue))
+                return string.IsNullOrEmpty(questlineValue);
 
             return false;
         }
 
-        public string getQuestOutcome()
+        public string GetQuestlineId() => 
+            DeliveryMetadata.ContainsKey(Constants.ReservedMeasurementKeys.QuestlineIdKey) ? 
+            DeliveryMetadata[Constants.ReservedMeasurementKeys.QuestlineIdKey] : null;
+    
+        public string GetQuestIdFromOutcome()
         {
             if (DeliveryMetadata == null || DeliveryMetadata.Count == 0)
                 return string.Empty;

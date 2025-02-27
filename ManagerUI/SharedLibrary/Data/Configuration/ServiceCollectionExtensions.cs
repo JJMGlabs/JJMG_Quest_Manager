@@ -9,7 +9,8 @@ namespace SharedLibrary.Data.Configuration
     {
         public static void ConfigureWritable<T>(
             this IServiceCollection services,
-            IConfigurationSection section
+            IConfigurationSection section,
+            string sectionName
             ) where T : class, new()
         {
             services.Configure<T>(section);
@@ -18,11 +19,11 @@ namespace SharedLibrary.Data.Configuration
             services.AddOptions<T>()
                 .Configure<IConfiguration>(
     (options, configuration) =>
-    configuration.GetSection(Constants.QuestDbConfigurationSection).Bind(options));
+    configuration.GetSection(sectionName).Bind(options));
 
             
 
-            services.AddTransient<IWritableOptions<T>>(provider =>
+            services.AddSingleton<IWritableOptions<T>>(provider =>
             {
                 var environment = provider.GetService<IHostEnvironment>();
                 var options = provider.GetService<IOptionsMonitor<T>>();

@@ -2,7 +2,7 @@
 using QuestManagerSharedResources.Model.Utility;
 using System.Collections.Generic;
 
-namespace QuestManager.Managers
+namespace QuestManager.Managers.Interfaces
 {
     public interface IQuestDbConnection
     {

@@ -1,0 +1,36 @@
+﻿@using Microsoft.AspNetCore.Components.Forms
+@using QuestManager.Managers.Interfaces
+@using QuestManagerSharedResources.Model
+@using SharedLibrary.Shared.Components
+@inject NavigationManager NavigationManager
+@inject IQuestDbConnection QuestDbConnection
+@inject IQuestlineDbConnection QuestLineDb
+
+<div class="container container-spacing">
+    <h3>QuestLineForm</h3>
+
+    <div class="form-flex-container">
+        <EditForm EditContext="@EditContext">
+            <div class="flex-item">
+                <div class="container container-spacing">
+                    <div class="form-group">
+                        <label for="name" class="form-label">Name</label>
+                        <input id="name" @bind="DialogTargetQuestLine.Name" class="form-control input-textbox" type="text" placeholder="Quest Name">
+                    </div>
+                </div>
+                <div class="container container-spacing">
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <input @bind="DialogTargetQuestLine.Description" class="form-control input-textbox" type="text" placeholder="Quest Description">
+                    </div>
+                </div>
+            </div>
+            <DictionaryInput @bind-dictionary="@DialogTargetQuestLine.Metadata" Label="Additional Metadata" />
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private EditContext EditContext;
+    public QuestlineMetadata DialogTargetQuestLine;
+}

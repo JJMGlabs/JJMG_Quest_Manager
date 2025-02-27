@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 using QuestManager.Utility;
-using QuestManagerApi.Controllers;
+using QuestManagerClientApi.Controllers;
 using QuestManagerSharedResources;
 using QuestManagerSharedResources.Model;
 using QuestManagerSharedResources.Model.Enums;
@@ -24,6 +24,7 @@ namespace QuestProgressionManager.Managers
         private string _sourcDbConnectionPath = null;
         private string _sourceDbCollectionName = null;
         private string _questProgressionFilePath;
+        private string _delimiter = null;
 
         public bool AutoSave { get; set; }
 
@@ -32,11 +33,13 @@ namespace QuestProgressionManager.Managers
             Initialise();
         }
 
-        public QuestProgressionManagerClient(string questProgressionFilePath, string sourceDbConnectionPath, string sourceDbCollectionName) : base()
+        public QuestProgressionManagerClient(string questProgressionFilePath, string sourceDbConnectionPath, string sourceDbCollectionName,string delimiter) : base()
         {
             _sourcDbConnectionPath = sourceDbConnectionPath;
             _sourceDbCollectionName = sourceDbCollectionName;
             _questProgressionFilePath = questProgressionFilePath;
+            _delimiter = delimiter;
+
             Initialise();
         }
 
@@ -239,9 +242,9 @@ namespace QuestProgressionManager.Managers
         {
             List<Quest> dbQuests;
             if (string.IsNullOrEmpty(_sourcDbConnectionPath) && string.IsNullOrEmpty(_sourceDbCollectionName))
-                dbQuests = LocalDbQuestController.GetAllQuestsFromDatabase();
+                dbQuests = LocalFileDbController.GetFallbackCollectionFromDatabase<Quest>();
             else
-                dbQuests = LocalDbQuestController.GetAllQuestsFromDatabase(_sourcDbConnectionPath, _sourceDbCollectionName);
+                dbQuests = LocalFileDbController.GetCollectionFromDatabase<Quest>(_sourcDbConnectionPath, _sourceDbCollectionName,_delimiter);
 
             if (dbQuests == null || dbQuests.Count == 0)
                 throw new Exception("Failed to retrieve any quests from database");

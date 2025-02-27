@@ -4,134 +4,64 @@
 @using QuestManager.Configuration
 @using System.Text.RegularExpressions
 @using SharedLibrary.Data.Configuration
+@using SharedLibrary.Shared.Components
+@using SharedLibrary.Shared.Components.Dialog
 
-@*Write access options are not gaurenteed to be up to date with in memory changes done by quest manager*@
-@inject IOptions<DbConnectionOptions> questDbOptions;
-@inject IWritableOptions<DbConnectionOptions> questDbOptionsWriteAccess;
+@*Write access options are not guaranteed to be up to date with in-memory changes done by quest manager*@
+@inject IOptions<QuestDbConnectionOptions> questDbOptions;
+@inject IWritableOptions<QuestDbConnectionOptions> questDbOptionsWriteAccess;
+@inject IOptions<QuestLineDbConnectionOptions> questlineDbOptions;
+@inject IWritableOptions<QuestLineDbConnectionOptions> questlineDbOptionsWriteAccess;
 
 @inject NavigationManager navManager;
 
 <PageTitle>Settings</PageTitle>
 
 <div class="container" style="padding-top:20px">
-    <h4>Database Connection</h4>
-    <hr class="solid">
-    <div class="settingContainer">
-        <div class="settingDetailContainer">
-            <label class="settingDetailHeader">Folder</label>
-            <label class="settingDetailDescription">Folder path where your database is located</label>
-        </div>
-        <div class="settingControlContainer">
-            @if (invalidFolderPath)
-            {
-                <label class="errorLabel">Invalid folder path, folder does not exist!</label>
-            }
-            <input class="form-control input-textbox" type="text" value="@folderPath" @onchange="ValidateFolderPath">
-        </div>
-    </div>
-
-    <div class="settingContainer">
-        <div class="settingDetailContainer">
-            <label class="settingDetailHeader">File Name</label>
-            <label class="settingDetailDescription">The name your json database file will have</label>
-        </div>
-        <div class="settingControlContainer">
-            @if (invalidFileName)
-            {
-                <label class="errorLabel">Invalid file name!</label>
-            }
-            <input class="form-control input-textbox" type="text" value="@fileName" @onchange="ValidateFileName">
-        </div>
-    </div>
-
-    <div class="settingContainer">
-        <div class="settingDetailContainer">
-            <label class="settingDetailHeader">File Path To Database:</label>
-        </div>
-        <div class="settingControlContainer">
-            <label>@fullFolderPath()</label>
-        </div>
-    </div>
+    <h4>File Based Database Connection</h4>
+    <CascadingValue Value="questDbOptions">
+        <CascadingValue Value="questDbOptionsWriteAccess">
+            <DatabaseSettings @ref="questDatabaseSettings" TOptions="QuestDbConnectionOptions" />
+        </CascadingValue>
+    </CascadingValue>
+    <h4>Questline Database Connection</h4>
+    <CascadingValue Value="questlineDbOptions">
+        <CascadingValue Value="questlineDbOptionsWriteAccess">
+            <DatabaseSettings @ref="questlineDatabaseSettings" TOptions="QuestLineDbConnectionOptions" />
+        </CascadingValue>
+    </CascadingValue>
 
     <div style="padding-top:20px">
-        @if (!validInput())
-        {
-            <label class="errorLabel">Cannot save settings with invalid input</label>
-        }
         <button type="button" class="btn btn-primary" @onclick=@SaveSettings>Save</button>
     </div>
 </div>
 
+<Toast @ref="toast" />
+
 @code {
-    //DatabaseConnection Validation
-    bool invalidFolderPath;
-    bool invalidFileName;
+    private DatabaseSettings<QuestDbConnectionOptions> questDatabaseSettings;
+    private DatabaseSettings<QuestLineDbConnectionOptions> questlineDatabaseSettings;
 
-    //DatabaseConnection Settings
-    string folderPath;
-    string fileName;
-    string storedFileName() => string.Format(@"\{0}.json", fileName);
-
-    string fullFolderPath() => folderPath + storedFileName();
-
-
-    bool validInput() => !invalidFolderPath && !invalidFileName;
-
+    private Toast toast;
 
     protected override void OnInitialized()
     {
-        folderPath = questDbOptions.Value.BasePath + questDbOptions.Value.DbName;
-        fileName = questDbOptions.Value.CollectionName.Remove(0, 1);
-        fileName = fileName.Replace(".json", "");
+        Console.WriteLine(questDbOptions.Value.DbName);
+        Console.WriteLine(questlineDbOptions.Value.DbName);
         base.OnInitialized();
     }
 
-    private void ValidateFolderPath(ChangeEventArgs args)
+    private async Task SaveSettings()
     {
-        var value = (string)args.Value;
+        if (questDatabaseSettings.ValidationFailed || questlineDatabaseSettings.ValidationFailed)
+            toast.Show("Some settings could not be saved, check the error messages.", "alert-danger");
 
-        invalidFolderPath = string.IsNullOrEmpty(value) || !System.IO.Directory.Exists(value);
+        if (questDatabaseSettings != null && !questDatabaseSettings.ValidationFailed)
+            questDatabaseSettings.SaveSettings();
 
-        folderPath = value;
+        if (questlineDatabaseSettings != null && !questlineDatabaseSettings.ValidationFailed)
+            questlineDatabaseSettings.SaveSettings();
+
+        toast.Show("Settings saved successfully.", "alert-success");
     }
-
-    private void ValidateFileName(ChangeEventArgs args)
-    {
-        var value = (string)args.Value;
-
-
-
-        string invalidFileNameChars = new string(System.IO.Path.GetInvalidFileNameChars()) + '.';
-        Regex invalidFileNameRegex = new Regex("[" + Regex.Escape(invalidFileNameChars) + "]");
-
-        invalidFileName = string.IsNullOrEmpty(value) || invalidFileNameRegex.IsMatch(value);
-
-        fileName = value;
-    }
-
-    private void SaveSettings()
-    {
-        if (!validInput())
-            return;
-
-        var index = folderPath.LastIndexOf('\\');
-
-        questDbOptions.Value.DbName = folderPath.Substring(index);
-        questDbOptions.Value.BasePath = folderPath.Remove(index);
-        questDbOptions.Value.CollectionName = storedFileName();
-        
-
-
-        questDbOptionsWriteAccess.Update(opt =>
-        {
-            opt.DbName = questDbOptions.Value.DbName;
-            opt.BasePath = questDbOptions.Value.BasePath;
-            opt.CollectionName = questDbOptions.Value.CollectionName;
-        });
-
-        //force reload to update QuestManager
-        navManager.NavigateTo(navManager.Uri, forceLoad: true);
-    }
-
-
 }
