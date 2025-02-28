@@ -13,6 +13,7 @@
             public static string QuestForm = "questForm";
             public static string Settings = "settings";
             public static string QuestLines = "questLines";
+            public static string QuestLineForm = "questLineForm";
         }
     }
 }

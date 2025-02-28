@@ -83,7 +83,7 @@ else
 
     private void FormQuestLinePageUrl(QuestlineMetadata questLine = null)
     {
-        string questLineUrl = $"{Constants.Routes.QuestLines}?callingPage={Constants.Routes.QuestLines}";
+        string questLineUrl = $"{Constants.Routes.QuestLineForm}?callingPage={Constants.Routes.QuestLines}";
 
         if (questLine != null)
             questLineUrl += "&questLineId=" + questLine.Id;
