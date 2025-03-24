@@ -15,6 +15,7 @@ namespace SharedLibrary
             services.ConfigureWritable<QuestLineDbConnectionOptions>(configuration.GetSection(Constants.QuestLineDbConfigurationSection), Constants.QuestLineDbConfigurationSection);
             services.AddScoped<IQuestDbConnection, QuestDbConnection>();
             services.AddScoped<IQuestlineDbConnection, QuestlineDbConnection>();
+            services.AddScoped<IQuestlineQuestRelationshipConnection, QuestlineDbConnection>();
         }
     }
 }

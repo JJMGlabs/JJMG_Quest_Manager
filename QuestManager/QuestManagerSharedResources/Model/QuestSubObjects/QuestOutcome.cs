@@ -28,7 +28,7 @@ namespace QuestManagerSharedResources.QuestSubObjects
                 return false;
 
             if (DeliveryMetadata.TryGetValue(Constants.ReservedMeasurementKeys.QuestlineIdKey, out string questlineValue))
-                return string.IsNullOrEmpty(questlineValue);
+                return !string.IsNullOrEmpty(questlineValue);
 
             return false;
         }

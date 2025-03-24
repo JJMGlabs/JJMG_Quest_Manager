@@ -80,7 +80,7 @@ namespace QuestManager.Managers
         public Quest GetQuest(string id)
         {
             var quests = GetAllQuests();
-            return quests.First(q => q.Id == id);
+            return quests.FirstOrDefault(q => q.Id == id);
         }
 
         public Quest UpdateQuest(Quest quest)

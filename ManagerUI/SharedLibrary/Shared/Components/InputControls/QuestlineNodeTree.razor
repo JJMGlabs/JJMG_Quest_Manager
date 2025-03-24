@@ -1,0 +1,225 @@
+﻿@using QuestManager.Managers.Interfaces
+@using QuestManagerSharedResources.Model
+@using QuestManagerSharedResources.QuestSubObjects
+@using SharedLibrary.Data.Callback
+@using SharedLibrary.Shared.Components.Modal
+
+@inject IQuestlineQuestRelationshipConnection QuestLineManager
+@inject IQuestDbConnection QuestDbConnection
+
+<h3>QuestlineNodeTree</h3>
+
+@if (QuestLineTree != null && QuestLineTree.Count > 0)
+{
+    <svg width="800" height="600">
+        @foreach (var level in QuestLineTree)
+        {
+            @for (int i = 0; i < level.Count; i++)
+            {
+                var quest = level[i];
+                <g>
+                    <circle cx="@xOffset" cy="@yOffset" r="20" stroke="black" stroke-width="2" fill="white" @onclick="() => OnNodeClick(quest.Id)" />
+                    <text x="@xOffset" y="@yOffset" text-anchor="middle" dy=".3em">@quest.Id</text>
+                </g>
+                @if (i > 0)
+                {
+                    <line x1="@(xOffset - 100)" y1="@yOffset" x2="@xOffset" y2="@yOffset" stroke="black" @onclick="() => OnLineClick(level[i - 1].Id, quest.Id)" />
+                    xOffset += 100;
+                }
+            }
+            yOffset += 100;
+        }
+    </svg>
+}
+
+@if (QuestLineTree == null || QuestLineTree.Count == 0)
+{
+    <div style="text-align:center;">
+        <button class="btn btn-primary" @onclick="() =>OpenQuestSelectDialog(string.Empty)">Add Quest</button>
+    </div>
+}
+
+@if (QuestSelectDialogOpen)
+{
+    <QuestSelectModal Title="Add Quest" OnClose="@CloseQuestSelectDialog"></QuestSelectModal>
+}
+
+@code {
+    [Parameter]
+    public string QuestLineId { get; set; }
+
+    public bool QuestSelectDialogOpen { get; set; }
+
+    private List<List<Quest>> QuestLineTree;
+
+    string prevQuestId = "";
+    string nextQuestId = "";
+    string currentQuestId = "";
+
+    private int yOffset = 50;
+    private int xOffset = 50;
+    private string _questKey = QuestManagerSharedResources.Constants.ReservedMeasurementKeys.OutcomeQuestKey;
+    private string _questlineKey = QuestManagerSharedResources.Constants.ReservedMeasurementKeys.QuestlineIdKey;
+
+    protected override void OnInitialized()
+    {
+        if (string.IsNullOrEmpty(QuestLineId))
+            return;
+
+        QuestLineTree = QuestLineManager.GetQuestline(QuestLineId);
+    }
+
+    private void OnNodeClick(string questId)
+    {
+        currentQuestId = questId;
+        OpenQuestSelectDialog(string.Empty);
+    }
+
+    private void OnLineClick(string fromQuestId, string toQuestId)
+    {
+        prevQuestId = fromQuestId;
+        nextQuestId = toQuestId;
+        OpenQuestSelectDialog(string.Empty);
+    }
+
+    private async Task UpdateQuestId(string selectedQuestId)
+    {
+        var selectedQuest = QuestDbConnection.GetQuest(selectedQuestId);
+
+        if (selectedQuest == null)
+            return;
+
+        var currentQuest = QuestDbConnection.GetQuest(currentQuestId);
+        var prevQuest = QuestDbConnection.GetQuest(prevQuestId);
+        var nextQuest = QuestDbConnection.GetQuest(nextQuestId);
+
+        //if currentQuest prev and next are null we are adding the first quest so simply add questline outcome
+        if (currentQuest == null && prevQuest == null && nextQuest == null)
+        {
+            AddQuestOutcomeToQuest(selectedQuest, "", QuestLineId);
+            ResetSelection();
+            return;
+        }
+
+        // current and selected are the same id do nothing
+        if (currentQuest != null && selectedQuest != null && currentQuest.Id == selectedQuest.Id)
+        {
+            ResetSelection();
+            return;
+        }
+
+        var questline = QuestLineManager.GetQuestline(QuestLineId);
+
+        //if current is not null but prev and next is this is a dot scenario so we:
+        if (currentQuest != null && prevQuest == null && nextQuest == null)
+        {
+            UpdateNode(questline, prevQuest, nextQuest, currentQuest, selectedQuest);
+            ResetSelection();
+            return;
+        }
+
+        //if current is null but prev and next are not this is a line scenario so we:
+        if (currentQuest == null && prevQuest != null && nextQuest != null)
+        {
+            // 1. set prev to target selected
+            ReplaceQuestOutcomeFromQuest(prevQuest, nextQuest.Id, QuestLineId, !string.IsNullOrEmpty(selectedQuest?.Id) ? selectedQuest.Id : "");
+            // 2. set selected to target next
+            AddQuestOutcomeToQuest(selectedQuest, nextQuest.Id, QuestLineId);
+            ResetSelection();
+            return;
+        }
+    }
+
+    private void ResetSelection()
+    {
+        prevQuestId = string.Empty;
+        nextQuestId = string.Empty;
+        currentQuestId = string.Empty;
+    }
+
+    private void UpdateNode(List<List<Quest>> questline, Quest prevQuest, Quest nextQuest, Quest currentQuest, Quest newCurrentQuest)
+    {
+        if (questline == null || questline.Count == 0)
+            return;
+
+        // 1. get the quest in the questline which has this as outcome
+        prevQuest = (from q in questline
+                     from o in q
+                     where o.QuestOutcomes != null && o.QuestOutcomes.Any(x => x.GetQuestlineId() == currentQuest.Id)
+                     select o).FirstOrDefault();
+
+        // 2. get the quest in the questline which the current targets as an outcome
+        nextQuest = QuestDbConnection.GetQuest(currentQuest.QuestOutcomes?.FirstOrDefault(x => x.GetQuestlineId() == currentQuest.Id)?.GetQuestIdFromOutcome());
+
+        // 3. set the quest targeting current/prev to target selected
+        ReplaceQuestOutcomeFromQuest(prevQuest, currentQuest.Id, QuestLineId, newCurrentQuest.Id);
+
+        // 4. current to no longer target next
+        RemoveQuestOutcomeFromQuest(currentQuest, nextQuest.Id, QuestLineId);
+        // 5. set selected to target next
+        AddQuestOutcomeToQuest(newCurrentQuest, nextQuest.Id, QuestLineId);
+    }
+
+
+    private void AddQuestOutcomeToQuest(Quest quest, string outcomeQuest, string outcomeQuestline)
+    {
+        var existingOutcomes = quest.QuestOutcomes?.Where(x => x.isQuestlineOutcome() && x.GetQuestlineId() == outcomeQuestline);
+
+        //first check if the outcome already exists
+        var outcome = existingOutcomes?.FirstOrDefault(x => x.GetQuestIdFromOutcome() == outcomeQuest);
+        //nothing to be done
+        if (outcome != null)
+            return;
+
+        outcome = new QuestOutcome();
+
+        outcome.DeliveryMetadata = new Dictionary<string, string>();
+        outcome.DeliveryMetadata.Add(_questKey, outcomeQuest);
+        outcome.DeliveryMetadata.Add(_questlineKey, outcomeQuestline);
+ 
+        quest.AddSubObject<QuestOutcome>(outcome);
+
+        QuestDbConnection.UpdateQuest(quest);
+    }
+
+    private void RemoveQuestOutcomeFromQuest(Quest quest, string outcomeQuest, string outcomeQuestline)
+    {
+        var existingOutcome = quest.QuestOutcomes.FirstOrDefault(x => x.isQuestlineOutcome() && x.GetQuestIdFromOutcome() == outcomeQuest && x.GetQuestlineId() == outcomeQuestline);
+
+        if (existingOutcome == null)
+            return;
+
+        quest.RemoveSubObject<QuestOutcome>(existingOutcome.Id);
+
+        QuestDbConnection.UpdateQuest(quest);
+    }
+
+    private void ReplaceQuestOutcomeFromQuest(Quest quest, string outcomeQuest, string outcomeQuestline, string newOutcomeQuest)
+    {
+        var existingOutcome = quest.QuestOutcomes.FirstOrDefault(x => x.isQuestlineOutcome() && x.GetQuestIdFromOutcome() == outcomeQuest && x.GetQuestlineId() == outcomeQuestline);
+        if (existingOutcome == null)
+            return;
+
+        quest.RemoveSubObject<QuestOutcome>(existingOutcome.Id);
+        existingOutcome.DeliveryMetadata.Remove(_questKey);
+        existingOutcome.DeliveryMetadata.Add(_questKey, newOutcomeQuest);
+        quest.QuestOutcomes.Add(existingOutcome);
+
+        QuestDbConnection.UpdateQuest(quest);
+    }
+
+    private async void CloseQuestSelectDialog(DialogCallback<string> callback)
+    {
+        QuestSelectDialogOpen = false;
+
+        if (callback == null || string.IsNullOrEmpty(callback.CallbackObject))
+            return;
+
+        await UpdateQuestId(callback.CallbackObject);
+    }
+
+    private void OpenQuestSelectDialog(string questId)
+    {
+        QuestSelectDialogOpen = true;
+    }
+}

@@ -2,6 +2,7 @@
 @using QuestManager.Managers.Interfaces
 @using QuestManagerSharedResources.Model
 @using SharedLibrary.Shared.Components
+@using SharedLibrary.Shared.Components.Modal
 
 <PageTitle>QuestLines</PageTitle>
 
@@ -56,6 +57,11 @@ else
     </div>
 }
 
+@if (DeleteDialogOpen)
+{
+    <ModalDialog Title="Delete Questline" Text="Delete this questline" OnClose="@CloseDeleteDialog"></ModalDialog>
+}
+
 @if (!string.IsNullOrEmpty(_errorModalMessage))
 {
     <ModalDialog Title="An Error Occured" Text=@_errorModalMessage OnClose="@CloseErrorDialog" DialogType="ModalDialog.ModalDialogType.Ok"></ModalDialog>
@@ -65,6 +71,7 @@ else
     private List<QuestlineMetadata>? questLines;
 
     private string _errorModalMessage;
+    private string _questLineToDelete;
 
     public bool DeleteDialogOpen { get; set; }
 
@@ -103,14 +110,15 @@ else
         if (!accepted)
             return;
 
-            //TODO : Delete QuestLine
-        //Save db changes
-        // refresh questLines
+        questLines.RemoveAll(q => q.Id == _questLineToDelete);
+        QuestLineDb.WriteQuestLines(questLines);
+        QuestLineDb.SaveDbChanges();
 
     }
 
     private void OpenDeleteDialog(QuestlineMetadata questLine)
     {
+        _questLineToDelete = questLine.Id;
         DeleteDialogOpen = true;
     }
 }

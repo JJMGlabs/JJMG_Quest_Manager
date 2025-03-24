@@ -1,0 +1,108 @@
+﻿@using Microsoft.AspNetCore.Components.Forms
+@using QuestManager.Managers.Interfaces
+@using QuestManagerSharedResources.Model
+@using SharedLibrary.Data.Callback
+@using SharedLibrary.Data.Enum
+
+@inject IQuestDbConnection QuestDbConnection
+
+<div class="modal fade show" id="reqModal" style="display:block;" aria-modal="true" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">@Title</h4>
+                <button type="button" class="close" @onclick="@ModalCancel">&times;</button>
+            </div>
+            <div class="modal-body">
+                <EditForm EditContext="@EditContext">
+                    <div class="form-group">
+                        <label for="search" class="form-label">Search For Quest</label>
+                        <input id="search" @bind="DialogTargetQuestId" @oninput="FilterQuests" class="form-control" type="text" placeholder="Name">
+                    </div>
+                    @if (FilteredQuests.Any())
+                    {
+                        <ul class="list-group">
+                            @foreach (var quest in FilteredQuests)
+                            {
+                                <li class="list-group-item" @onclick="() => SelectQuestId(quest.Id)">@($"({quest.Id}) {quest.Name}")</li>
+                            }
+                        </ul>
+                    }
+                </EditForm>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn" @onclick="@ModalCancel">Cancel</button>
+                <button type="button" class="btn btn-primary" @onclick=@ModalOk>OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private EditContext EditContext;
+
+    [Parameter]
+    public string Title { get; set; }
+
+    [Parameter]
+    public string DialogTargetQuestId { get; set; }
+
+    [Parameter]
+    public DialogState CurrentDialogState { get; set; }
+
+    [Parameter]
+    public EventCallback<DialogCallback<string>> OnClose { get; set; }
+
+    private List<Quest> _quests;
+    private List<Quest> FilteredQuests = new();
+
+    protected override void OnInitialized()
+    {
+        if (DialogTargetQuestId == null)
+            DialogTargetQuestId = string.Empty;
+
+        EditContext = new EditContext(DialogTargetQuestId);
+
+        _quests = QuestDbConnection.GetAllQuests().ToList();
+
+        if (_quests == null)
+            _quests = new List<Quest>();
+
+        base.OnInitialized();
+    }
+
+    private void FilterQuests(ChangeEventArgs e)
+    {
+        var searchTerm = e.Value.ToString();
+        if (string.IsNullOrEmpty(searchTerm))
+        {
+            FilteredQuests.Clear();
+        }
+        else
+        {
+            FilteredQuests = _quests
+                .Where(q => (q.Id != null && q.Id.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) ||
+                            (q.Name != null && q.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) ||
+                            (q.Description != null && q.Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)))
+                .ToList();
+        }
+    }
+
+    private void SelectQuestId(string questId)
+    {
+        DialogTargetQuestId = questId;
+        FilteredQuests.Clear();
+    }
+
+    protected virtual Task ModalCancel()
+    {
+        return OnClose.InvokeAsync(null);
+    }
+
+    protected virtual Task ModalOk()
+    {
+        var result = new DialogCallback<string>(DialogTargetQuestId, CurrentDialogState);
+
+        return OnClose.InvokeAsync(result);
+    }
+}
