@@ -5,9 +5,11 @@ using QuestManager.Utility;
 using QuestManagerSharedResources;
 using QuestManagerSharedResources.Model;
 using QuestManagerSharedResources.Model.Utility;
+using QuestManagerSharedResources.QuestSubObjects;
 using QuestManagerSharedResources.Utility;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace QuestManager.Managers
@@ -99,47 +101,72 @@ namespace QuestManager.Managers
                 .Where(q => q.QuestOutcomes != null && q.QuestOutcomes.Any(o => o.isQuestlineOutcome() && o.GetQuestlineId() == questlineId))
                 .ToList();
 
-            var mappedQuests = allQuests.ToDictionary(q => q.Id);
+            if(allQuests == null || !allQuests.Any())
+                return new List<List<Quest>>();
 
             List<List<Quest>> orderedQuestlinePaths = new List<List<Quest>>();
 
-            // Start at root quests
-            var rootQuests = allQuests
-                .Where(q => !allQuests.Any(otherQuest => otherQuest.QuestOutcomes
+            // 1. split allQuests into groups based on (A) no outcomes point to them, (B) All alternates to form paths
+            List<Quest> originQuests = allQuests.Where(q => !allQuests.Any(otherQuest => otherQuest.QuestOutcomes
                     .Any(o => o.GetQuestIdFromOutcome() == q.Id)))  // Root quests are not outcomes of other quests
                 .ToList();
 
-            foreach (var rootQuest in rootQuests)
-                BuildQuestlinePath(rootQuest, new List<Quest>(), mappedQuests, orderedQuestlinePaths);
+            var pathQuests = allQuests.Where(q => !originQuests.Contains(q)).ToDictionary(q => q.Id);
+            // 2. We can freely traverse all nodeas from each group A node to find all paths
+            foreach (var originQuest in originQuests)
+                BuildQuestlinePath(questlineId, new List<Quest>() { originQuest }, pathQuests, orderedQuestlinePaths);
 
             return orderedQuestlinePaths;
         }
 
-        private static void BuildQuestlinePath(Quest currentQuest, List<Quest> currentPath, Dictionary<string, Quest> mappedQuests, List<List<Quest>> orderedQuestlinePaths)
+        private List<List<Quest>> BuildQuestlinePath(string questlineId, List<Quest> currentPath, Dictionary<string, Quest> availableQuests, List<List<Quest>> orderedQuestlinePaths)
         {
-            HashSet<string> visitedQuests = new HashSet<string>();
-
-            if (visitedQuests.Contains(currentQuest.Id))
-                return;
-
-            currentPath.Add(currentQuest);
-            visitedQuests.Add(currentQuest.Id);
-
-            var nextQuestIds = currentQuest.QuestOutcomes
-                .Select(o => o.GetQuestIdFromOutcome())
-                .Where(nextQuestId => !string.IsNullOrEmpty(nextQuestId))
-                .ToList();
-
-            if (!nextQuestIds.Any())
+            if (availableQuests == null || !availableQuests.Any())
             {
-                orderedQuestlinePaths.Add(new List<Quest>(currentPath));
+                orderedQuestlinePaths.Add(currentPath);
+                return orderedQuestlinePaths;
             }
-            else
+
+            var outcomes = currentPath.Last().QuestOutcomes.Where(o => o.isQuestlineOutcome() && o.GetQuestlineId() == questlineId);
+
+           foreach (var outcome in outcomes)
             {
-                foreach (var nextQuestId in nextQuestIds)
-                    if (mappedQuests.ContainsKey(nextQuestId))
-                        BuildQuestlinePath(mappedQuests[nextQuestId], new List<Quest>(currentPath), mappedQuests, orderedQuestlinePaths);
+                var questID = outcome.GetQuestIdFromOutcome();
+                if (outcomes.Count() == 1)
+                {
+                    if (string.IsNullOrEmpty(questID))
+                    {
+                        orderedQuestlinePaths.Add(currentPath);
+                        break;
+                    }
+                    currentPath.Add(availableQuests[questID]);
+                    BuildQuestlinePath(questlineId, currentPath, availableQuests, orderedQuestlinePaths);
+                }
+                else
+                {
+                    //in the first path we can simply return no need to start a new recursion
+                    if (outcome == outcomes.First())
+                    {
+                        if (string.IsNullOrEmpty(questID) || !availableQuests.ContainsKey(questID))
+                        {
+                            orderedQuestlinePaths.Add(currentPath);
+                            break;
+                        }
+                        orderedQuestlinePaths.Add(new List<Quest>(currentPath) { availableQuests[questID] });
+                    }
+                    else
+                    {
+                        if (string.IsNullOrEmpty(questID) || !availableQuests.ContainsKey(questID))
+                        {
+                            orderedQuestlinePaths.Add(currentPath);
+                            break;
+                        }
+
+                        BuildQuestlinePath(questlineId, new List<Quest>(currentPath) { availableQuests[questID] }, availableQuests, orderedQuestlinePaths);
+                    }
+                }
             }
+            return orderedQuestlinePaths;
         }
     }
 }

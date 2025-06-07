@@ -14,6 +14,8 @@
     <svg width="800" height="600">
         @foreach (var level in QuestLineTree)
         {
+            int xOffset = 70;
+            int yOffset = 70 + (QuestLineTree.IndexOf(level) * 100);
             @for (int i = 0; i < level.Count; i++)
             {
                 var quest = level[i];
@@ -24,10 +26,18 @@
                 @if (i > 0)
                 {
                     <line x1="@(xOffset - 100)" y1="@yOffset" x2="@xOffset" y2="@yOffset" stroke="black" @onclick="() => OnLineClick(level[i - 1].Id, quest.Id)" />
-                    xOffset += 100;
                 }
+                xOffset += 100;
             }
-            yOffset += 100;
+            // Check if the last node in the level has no outgoing connections
+            var lastQuest = level.LastOrDefault();
+            if (lastQuest != null && !QuestLineTree.Any(l => l.Any(q => q.QuestOutcomes?.Any(o => o.GetQuestIdFromOutcome() == lastQuest.Id) == true)))
+            {
+                <g>
+                    <circle cx="@xOffset" cy="@yOffset" r="20" stroke="black" stroke-width="2" fill="lightgray" @onclick="() => OnAddNodeClick(lastQuest.Id)" />
+                    <text x="@xOffset" y="@yOffset" text-anchor="middle" dy=".3em">+</text>
+                </g>
+            }
         }
     </svg>
 }
@@ -35,7 +45,7 @@
 @if (QuestLineTree == null || QuestLineTree.Count == 0)
 {
     <div style="text-align:center;">
-        <button class="btn btn-primary" @onclick="() =>OpenQuestSelectDialog(string.Empty)">Add Quest</button>
+        <button class="btn btn-primary" @onclick="() => OpenQuestSelectDialog(string.Empty)">Add Quest</button>
     </div>
 }
 
@@ -56,8 +66,8 @@
     string nextQuestId = "";
     string currentQuestId = "";
 
-    private int yOffset = 50;
-    private int xOffset = 50;
+    private int yOffset = 70;
+    private int xOffset = 70;
     private string _questKey = QuestManagerSharedResources.Constants.ReservedMeasurementKeys.OutcomeQuestKey;
     private string _questlineKey = QuestManagerSharedResources.Constants.ReservedMeasurementKeys.QuestlineIdKey;
 
@@ -82,6 +92,13 @@
         OpenQuestSelectDialog(string.Empty);
     }
 
+    private void OnAddNodeClick(string questId)
+    {
+        prevQuestId = questId;
+        nextQuestId = string.Empty;
+        OpenQuestSelectDialog(string.Empty);
+    }
+
     private async Task UpdateQuestId(string selectedQuestId)
     {
         var selectedQuest = QuestDbConnection.GetQuest(selectedQuestId);
@@ -97,6 +114,7 @@
         if (currentQuest == null && prevQuest == null && nextQuest == null)
         {
             AddQuestOutcomeToQuest(selectedQuest, "", QuestLineId);
+            QuestDbConnection.SaveQuestDbChanges();
             ResetSelection();
             return;
         }
@@ -110,10 +128,25 @@
 
         var questline = QuestLineManager.GetQuestline(QuestLineId);
 
+
+        //if selected and prev are not null but next is null this is an add new line scenario
+        if (currentQuest == null && prevQuest != null && selectedQuest != null && nextQuest == null)
+        {
+            RemoveQuestOutcomeFromQuest(prevQuest, string.Empty, QuestLineId);
+            QuestDbConnection.SaveQuestDbChanges();
+            AddQuestOutcomeToQuest(prevQuest, selectedQuest.Id, QuestLineId);
+            QuestDbConnection.SaveQuestDbChanges();
+            AddQuestOutcomeToQuest(selectedQuest, string.Empty, QuestLineId);
+            QuestDbConnection.SaveQuestDbChanges();
+            ResetSelection();
+            return;
+        }
+
         //if current is not null but prev and next is this is a dot scenario so we:
         if (currentQuest != null && prevQuest == null && nextQuest == null)
         {
             UpdateNode(questline, prevQuest, nextQuest, currentQuest, selectedQuest);
+            QuestDbConnection.SaveQuestDbChanges();
             ResetSelection();
             return;
         }
@@ -123,8 +156,10 @@
         {
             // 1. set prev to target selected
             ReplaceQuestOutcomeFromQuest(prevQuest, nextQuest.Id, QuestLineId, !string.IsNullOrEmpty(selectedQuest?.Id) ? selectedQuest.Id : "");
+            QuestDbConnection.SaveQuestDbChanges();
             // 2. set selected to target next
             AddQuestOutcomeToQuest(selectedQuest, nextQuest.Id, QuestLineId);
+            QuestDbConnection.SaveQuestDbChanges();
             ResetSelection();
             return;
         }
@@ -163,6 +198,9 @@
 
     private void AddQuestOutcomeToQuest(Quest quest, string outcomeQuest, string outcomeQuestline)
     {
+        if (quest == null || string.IsNullOrEmpty(outcomeQuestline))
+            return;
+
         var existingOutcomes = quest.QuestOutcomes?.Where(x => x.isQuestlineOutcome() && x.GetQuestlineId() == outcomeQuestline);
 
         //first check if the outcome already exists
@@ -176,15 +214,26 @@
         outcome.DeliveryMetadata = new Dictionary<string, string>();
         outcome.DeliveryMetadata.Add(_questKey, outcomeQuest);
         outcome.DeliveryMetadata.Add(_questlineKey, outcomeQuestline);
- 
+
         quest.AddSubObject<QuestOutcome>(outcome);
+
+        if (string.IsNullOrEmpty(outcomeQuest))
+        {
+            var outcomeQuestObject = QuestDbConnection.GetQuest(outcomeQuest);
+
+            AddQuestOutcomeToQuest(outcomeQuestObject, "", QuestLineId);
+        }
 
         QuestDbConnection.UpdateQuest(quest);
     }
 
-    private void RemoveQuestOutcomeFromQuest(Quest quest, string outcomeQuest, string outcomeQuestline)
+    private void RemoveQuestOutcomeFromQuest(Quest quest, string outcomeQuestId, string outcomeQuestlineId)
     {
-        var existingOutcome = quest.QuestOutcomes.FirstOrDefault(x => x.isQuestlineOutcome() && x.GetQuestIdFromOutcome() == outcomeQuest && x.GetQuestlineId() == outcomeQuestline);
+
+        var existingOutcome = quest.QuestOutcomes.FirstOrDefault(x =>
+            x.isQuestlineOutcome() &&
+            (x.GetQuestIdFromOutcome() == outcomeQuestId || x.GetQuestIdFromOutcome() == null) &&
+            x.GetQuestlineId() == outcomeQuestlineId);
 
         if (existingOutcome == null)
             return;
@@ -200,10 +249,40 @@
         if (existingOutcome == null)
             return;
 
+        var outcomeQuestObj = QuestDbConnection.GetQuest(newOutcomeQuest);
+
+        if (outcomeQuestObj == null)
+            return;
+
         quest.RemoveSubObject<QuestOutcome>(existingOutcome.Id);
-        existingOutcome.DeliveryMetadata.Remove(_questKey);
+
+        //Before we remove the quest kwy we need to check all outcomes and do one of the following
+        var currentOutcomeQuest = QuestDbConnection.GetQuest(existingOutcome.GetQuestIdFromOutcome());
+        var outcomes = currentOutcomeQuest?.QuestOutcomes?.Where(x => x.isQuestlineOutcome() && x.GetQuestlineId() == QuestLineId).ToList();
+        string outcomeId = string.Empty;
+        //1. if there is one outcome with no id we remove it with an id we hold it
+        if (outcomes != null && outcomes.Count == 1)
+        {
+            var outcome = outcomes.FirstOrDefault(x => !string.IsNullOrEmpty(x.GetQuestIdFromOutcome()));
+            if (outcome != null)
+                outcomeId = outcome.GetQuestIdFromOutcome();
+
+            currentOutcomeQuest.RemoveSubObject<QuestOutcome>(outcomes.First().Id);
+        }
+        else if (outcomes.Count > 1)
+        {
+            //2. if there are multiple outcomes we need to remove one with no id or leave them all
+            var outcome = outcomes.FirstOrDefault(x => string.IsNullOrEmpty(x.GetQuestIdFromOutcome()));
+            if (outcome != null)
+                currentOutcomeQuest.RemoveSubObject<QuestOutcome>(outcome.Id);
+        }
+
+
+    existingOutcome.DeliveryMetadata.Remove(_questKey);
         existingOutcome.DeliveryMetadata.Add(_questKey, newOutcomeQuest);
         quest.QuestOutcomes.Add(existingOutcome);
+
+        AddQuestOutcomeToQuest(outcomeQuestObj, outcomeId, QuestLineId);
 
         QuestDbConnection.UpdateQuest(quest);
     }
