@@ -11,41 +11,111 @@
 
 @if (QuestLineTree != null && QuestLineTree.Count > 0)
 {
-    <svg width="800" height="600">
-        @foreach (var level in QuestLineTree)
+    // Build unique node set and edges
+    var nodeDict = new Dictionary<string, Quest>();
+    var edges = new List<(string from, string to)>();
+    foreach (var path in QuestLineTree)
+    {
+        for (int i = 0; i < path.Count; i++)
         {
-            int xOffset = 70;
-            int yOffset = 70 + (QuestLineTree.IndexOf(level) * 100);
-            @for (int i = 0; i < level.Count; i++)
+            var quest = path[i];
+            if (!nodeDict.ContainsKey(quest.Id))
+                nodeDict[quest.Id] = quest;
+            if (i < path.Count - 1)
+                edges.Add((path[i].Id, path[i + 1].Id));
+        }
+    }
+    // Add additional edges for all questline outcomes (for true DAG)
+    foreach (var quest in nodeDict.Values)
+    {
+        if (quest.QuestOutcomes != null)
+        {
+            foreach (var outcome in quest.QuestOutcomes)
             {
-                var quest = level[i];
-                <g>
-                    <circle cx="@xOffset" cy="@yOffset" r="20" stroke="black" stroke-width="2" fill="white" @onclick="() => OnNodeClick(quest.Id)" />
-                    <text x="@xOffset" y="@yOffset" text-anchor="middle" dy=".3em">@quest.Id</text>
-                </g>
-                @if (i > 0)
+                if (outcome.isQuestlineOutcome() && outcome.GetQuestlineId() == QuestLineId)
                 {
-                    <line x1="@(xOffset - 100)" y1="@yOffset" x2="@xOffset" y2="@yOffset" stroke="black" @onclick="() => OnLineClick(level[i - 1].Id, quest.Id)" />
+                    var toId = outcome.GetQuestIdFromOutcome();
+                    if (!string.IsNullOrEmpty(toId) && nodeDict.ContainsKey(toId))
+                        edges.Add((quest.Id, toId));
                 }
-                xOffset += 100;
-            }
-            // Check if the last node in the level has no outgoing connections
-            var lastQuest = level.LastOrDefault();
-            if (lastQuest != null && !QuestLineTree.Any(l => l.Any(q => q.QuestOutcomes?.Any(o => o.GetQuestIdFromOutcome() == lastQuest.Id) == true)))
-            {
-                <g>
-                    <circle cx="@xOffset" cy="@yOffset" r="20" stroke="black" stroke-width="2" fill="lightgray" @onclick="() => OnAddNodeClick(lastQuest.Id)" />
-                    <text x="@xOffset" y="@yOffset" text-anchor="middle" dy=".3em">+</text>
-                </g>
             }
         }
-    </svg>
+    }
+    // Assign positions: simple layered layout by BFS
+    var nodeLevels = new Dictionary<string, int>();
+    var levelNodes = new Dictionary<int, List<string>>();
+    var visited = new HashSet<string>();
+    var queue = new Queue<(string id, int level)>();
+    // Find roots (nodes with no incoming edges)
+    var allTo = new HashSet<string>(edges.Select(e => e.to));
+    var roots = nodeDict.Keys.Where(id => !allTo.Contains(id)).ToList();
+    foreach (var root in roots)
+        queue.Enqueue((root, 0));
+    while (queue.Count > 0)
+    {
+        var (id, level) = queue.Dequeue();
+        if (visited.Contains(id)) continue;
+        visited.Add(id);
+        nodeLevels[id] = level;
+        if (!levelNodes.ContainsKey(level))
+            levelNodes[level] = new List<string>();
+        levelNodes[level].Add(id);
+        foreach (var edge in edges.Where(e => e.from == id))
+        {
+            if (!visited.Contains(edge.to))
+                queue.Enqueue((edge.to, level + 1));
+        }
+    }
+    // Assign x/y positions
+    var nodePositions = new Dictionary<string, (int x, int y)>();
+    int ySpacing = 100, xSpacing = 120;
+    int svgWidth = 1000;
+    int centerX = svgWidth / 2;
+    foreach (var level in levelNodes.Keys.OrderBy(l => l))
+    {
+        var nodes = levelNodes[level];
+        int count = nodes.Count;
+        if (count > 3)
+        {
+            // Radial layout for more than 3 nodes
+            double radius = 100 + level * 80;
+            double angleStep = 2 * Math.PI / count;
+            for (int i = 0; i < count; i++)
+            {
+                double angle = -Math.PI / 2 + i * angleStep; // Start at top
+                int x = centerX + (int)(radius * Math.Cos(angle));
+                int y = 100 + (int)(radius * Math.Sin(angle));
+                nodePositions[nodes[i]] = (x, y);
+            }
+        }
+        else
+        {
+            // Alternate left/right from center for 3 or fewer nodes
+            int baseY = ySpacing + level * ySpacing;
+            int baseX = centerX;
+            for (int i = 0; i < count; i++)
+            {
+                int offset = ((i % 2 == 0) ? 1 : -1) * ((i + 1) / 2) * xSpacing;
+                int x = baseX + offset;
+                nodePositions[nodes[i]] = (x, baseY);
+            }
+        }
+    }
+
+    @RenderNodeTreeSvg(nodeDict, edges, nodePositions, nodeLevels, levelNodes, xSpacing, ySpacing)
 }
 
 @if (QuestLineTree == null || QuestLineTree.Count == 0)
 {
-    <div style="text-align:center;">
-        <button class="btn btn-primary" @onclick="() => OpenQuestSelectDialog(string.Empty)">Add Quest</button>
+    <div style="text-align:center; width:1000px; height:700px; display:flex; align-items:center; justify-content:center;">
+        <svg width="1000" height="700">
+            <g transform="translate(500, 350)" style="cursor:pointer;" @onclick="() => OpenQuestSelectDialog(string.Empty)">
+                <circle cx="0" cy="0" r="20" stroke="black" stroke-width="2" fill="lightgray" />
+                <svg x="-10" y="-10" width="20" height="20" viewBox="0 0 8 8" style="pointer-events:none;">
+                    <path fill="var(--bs-success)" d="M3 0v3H0v2h3v3h2V5h3V3H5V0z" />
+                </svg>
+            </g>
+        </svg>
     </div>
 }
 
@@ -301,4 +371,160 @@
     {
         QuestSelectDialogOpen = true;
     }
+
+    // --- UI rendering helpers ---
+    RenderFragment RenderNodeTreeSvg(
+        Dictionary<string, Quest> nodeDict,
+        List<(string from, string to)> edges,
+        Dictionary<string, (int x, int y)> nodePositions,
+        Dictionary<string, int> nodeLevels,
+        Dictionary<int, List<string>> levelNodes,
+        int xSpacing,
+        int ySpacing
+    ) => __builder =>
+    {
+        <svg width="1000" height="700">
+            @RenderEdges(edges, nodePositions)
+            @RenderDefs()
+            @RenderNodes(nodeDict, nodePositions)
+            @RenderPlusNodes(nodeDict, edges, nodePositions, nodeLevels, levelNodes, xSpacing, ySpacing)
+            @RenderNewRootPlus(levelNodes, xSpacing, ySpacing)
+        </svg>;
+    };
+
+    RenderFragment RenderNodes(Dictionary<string, Quest> nodeDict, Dictionary<string, (int x, int y)> nodePositions) => __builder =>
+    {
+        // Find root nodes (level 0)
+        var rootIds = nodePositions.Keys.Where(id => nodePositions[id].y == 100).ToHashSet();
+        foreach (var node in nodeDict.Values)
+        {
+            var (x, y) = nodePositions[node.Id];
+            bool isRoot = rootIds.Contains(node.Id);
+            string fillColor = isRoot ? "var(--bs-warning)" : "var(--bs-info)";
+            // Remove border by setting stroke to 'none'
+            <g>
+                <circle cx="@x" cy="@y" r="20" stroke="none" stroke-width="0" fill="@fillColor" @onclick="() => OnNodeClick(node.Id)" />
+                <text x="@(x + 28)" y="@y" text-anchor="start" dy=".3em" fill="#fff">@node.Id</text>
+            </g>
+        }
+    };
+
+    RenderFragment RenderEdges(List<(string from, string to)> edges, Dictionary<string, (int x, int y)> nodePositions) => __builder =>
+    {
+        foreach (var edge in edges.Distinct())
+        {
+            if (nodePositions.ContainsKey(edge.from) && nodePositions.ContainsKey(edge.to))
+            {
+                var (x1, y1) = nodePositions[edge.from];
+                var (x2, y2) = nodePositions[edge.to];
+                <line x1="@x1" y1="@y1" x2="@x2" y2="@y2" stroke="var(--bs-light)" marker-end="url(#arrow)" />
+                // Plus icon at center
+                double midX = (x1 + x2) / 2.0;
+                double midY = (y1 + y2) / 2.0;
+                <g transform="translate(@midX, @midY)" style="cursor:pointer;" @onclick="() => OnLineClick(edge.from, edge.to)">
+                    <svg x="-10" y="-10" width="20" height="20" viewBox="0 0 8 8" style="pointer-events:none;">
+                        <path fill="var(--bs-success)" d="M3 0v3H0v2h3v3h2V5h3V3H5V0z" />
+                    </svg>
+                </g>
+            }
+        }
+    };
+
+    RenderFragment RenderDefs() => __builder =>
+    {
+        <defs>
+            <marker id="arrow" markerWidth="10" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="strokeWidth">
+                <path d="M0,0 L10,5 L0,10 L2,5 Z" fill="black" />
+            </marker>
+        </defs>;
+    };
+
+    RenderFragment RenderPlusNodes(
+        Dictionary<string, Quest> nodeDict,
+        List<(string from, string to)> edges,
+        Dictionary<string, (int x, int y)> nodePositions,
+        Dictionary<string, int> nodeLevels,
+        Dictionary<int, List<string>> levelNodes,
+        int xSpacing,
+        int ySpacing
+    ) => __builder =>
+    {
+        int svgWidth = 1000;
+        int centerX = svgWidth / 2;
+        var plusNodeCountAtLevel = new Dictionary<int, int>();
+        var usedPositionsAtLevel = new Dictionary<int, HashSet<int>>();
+        // Precompute used slot indices for each level
+        foreach (var kvp in levelNodes)
+        {
+            int level = kvp.Key;
+            var nodes = kvp.Value;
+            if (!usedPositionsAtLevel.ContainsKey(level))
+                usedPositionsAtLevel[level] = new HashSet<int>();
+            for (int i = 0; i < nodes.Count; i++)
+                usedPositionsAtLevel[level].Add(i);
+        }
+        foreach (var node in nodeDict.Values)
+        {
+            var (x, y) = nodePositions[node.Id];
+            int parentLevel = nodeLevels[node.Id];
+            int plusLevel = parentLevel + 1;
+            if (!plusNodeCountAtLevel.ContainsKey(plusLevel))
+                plusNodeCountAtLevel[plusLevel] = 0;
+            if (!usedPositionsAtLevel.ContainsKey(plusLevel))
+                usedPositionsAtLevel[plusLevel] = new HashSet<int>();
+            int count = (levelNodes.ContainsKey(plusLevel) ? levelNodes[plusLevel].Count : 0) + 1; // +1 for the new plus node
+            int slot = 0;
+            // Find the first unused slot index
+            while (usedPositionsAtLevel[plusLevel].Contains(slot))
+                slot++;
+            usedPositionsAtLevel[plusLevel].Add(slot);
+            plusNodeCountAtLevel[plusLevel]++;
+            int plusX, plusY;
+            if (count > 3)
+            {
+                // Radial layout for more than 3 nodes
+                double radius = 100 + plusLevel * 80;
+                double angleStep = 2 * Math.PI / count;
+                double angle = -Math.PI / 2 + slot * angleStep;
+                plusX = centerX + (int)(radius * Math.Cos(angle));
+                plusY = 100 + (int)(radius * Math.Sin(angle));
+            }
+            else
+            {
+                // Alternate left/right from center for 3 or fewer nodes
+                int baseY = ySpacing + plusLevel * ySpacing;
+                int baseX = centerX;
+                int offset = ((slot % 2 == 0) ? 1 : -1) * ((slot + 1) / 2) * xSpacing;
+                plusX = baseX + offset;
+                plusY = baseY;
+            }
+            double dx = plusX - x;
+            double dy = plusY - y;
+            double length = Math.Sqrt(dx * dx + dy * dy);
+            double startX = x + (length > 0 ? dx / length * 20 : 0);
+            double startY = y + (length > 0 ? dy / length * 20 : 0);
+            <line x1="@startX" y1="@startY" x2="@plusX" y2="@plusY" stroke="var(--bs-light)" stroke-dasharray="4" />
+            <g transform="translate(@plusX, @plusY)">
+                <circle cx="0" cy="0" r="20" stroke="none" stroke-width="0" fill="lightgray" @onclick="() => OnAddNodeClick(node.Id)" />
+                <svg x="-10" y="-10" width="20" height="20" viewBox="0 0 8 8" style="pointer-events:none;">
+                    <path fill="var(--bs-success)" d="M3 0v3H0v2h3v3h2V5h3V3H5V0z" />
+                </svg>
+            </g>
+        }
+    };
+
+    RenderFragment RenderNewRootPlus(Dictionary<int, List<string>> levelNodes, int xSpacing, int ySpacing) => __builder =>
+    {
+        var rootLevel = 0;
+        var rootNodes = levelNodes.ContainsKey(rootLevel) ? levelNodes[rootLevel] : new List<string>();
+        int newRootIndex = rootNodes.Count;
+        int newRootX = xSpacing + newRootIndex * xSpacing;
+        int newRootY = ySpacing;
+        <g transform="translate(@newRootX, @newRootY)">
+            <circle cx="0" cy="0" r="20" stroke="none" stroke-width="0" fill="lightgray" @onclick="() => OpenQuestSelectDialog(string.Empty)" />
+            <svg x="-10" y="-10" width="20" height="20" viewBox="0 0 8 8" style="pointer-events:none;">
+                <path fill="var(--bs-success)" d="M3 0v3H0v2h3v3h2V5h3V3H5V0z" />
+            </svg>
+        </g>;
+    };
 }
