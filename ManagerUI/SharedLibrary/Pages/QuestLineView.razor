@@ -1,0 +1,124 @@
+﻿@page "/questLines"
+@using QuestManager.Managers.Interfaces
+@using QuestManagerSharedResources.Model
+@using SharedLibrary.Shared.Components
+@using SharedLibrary.Shared.Components.Modal
+
+<PageTitle>QuestLines</PageTitle>
+
+@inject NavigationManager NavigationManager
+@inject IQuestlineDbConnection QuestLineDb
+@if (questLines == null || questLines.Count == 0)
+{
+    <p style="text-align:center; padding: 20px;"><em>No quest lines were found! Create one to get to get started?</em></p>
+    <div style="text-align:center;">
+        <button class="btn btn-primary" @onclick="() =>FormQuestLinePageUrl()">Create</button>
+    </div>
+}
+else
+{
+    <div class="container" style="padding-top:20px">
+        <div class="row">
+            <div class="col col-12">
+                <table class="table table-hover" style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th class="col-xs-2" scope="col">Id</th>
+                            <th class="col-xs-4" scope="col">Name</th>
+                            <th class="col-xs-5" scope="col">Description</th>
+                            <th class="col-xs-1">
+                                <button class="btn btn-link" @onclick="() =>FormQuestLinePageUrl()">
+                                    <span class="oi oi-plus" style="color:var(--bs-success)"></span>
+                                </button>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var ql in questLines)
+                        {
+                            <tr>
+                                <td>@ql.Id</td>
+                                <td>@ql.Name</td>
+                                <td>@ql.Description</td>
+                                <td>
+                                    <button class="btn btn-link" @onclick="() => OpenDeleteDialog(ql)">
+                                        <span class="oi oi-trash delete-trashcan-button"></span>
+                                    </button>
+                                    <button class="btn" @onclick="() => FormQuestLinePageUrl(ql)">
+                                        <span class="oi oi-pencil edit-pencil-button"></span>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+
+@if (DeleteDialogOpen)
+{
+    <ModalDialog Title="Delete Questline" Text="Delete this questline" OnClose="@CloseDeleteDialog"></ModalDialog>
+}
+
+@if (!string.IsNullOrEmpty(_errorModalMessage))
+{
+    <ModalDialog Title="An Error Occured" Text=@_errorModalMessage OnClose="@CloseErrorDialog" DialogType="ModalDialog.ModalDialogType.Ok"></ModalDialog>
+}
+
+@code {
+    private List<QuestlineMetadata>? questLines;
+
+    private string _errorModalMessage;
+    private string _questLineToDelete;
+
+    public bool DeleteDialogOpen { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            questLines = QuestLineDb.GetQuestlines();
+        }
+        catch (Exception e)
+        {
+            _errorModalMessage = e.Message;
+        }
+
+    }
+
+    private void FormQuestLinePageUrl(QuestlineMetadata questLine = null)
+    {
+        string questLineUrl = $"{Constants.Routes.QuestLineForm}?callingPage={Constants.Routes.QuestLines}";
+
+        if (questLine != null)
+            questLineUrl += "&questLineId=" + questLine.Id;
+
+        NavigationManager.NavigateTo(questLineUrl);
+    }
+
+    private void CloseErrorDialog()
+    {
+        _errorModalMessage = "";
+    }
+
+    private void CloseDeleteDialog(bool accepted)
+    {
+        DeleteDialogOpen = false;
+
+        if (!accepted)
+            return;
+
+        questLines.RemoveAll(q => q.Id == _questLineToDelete);
+        QuestLineDb.WriteQuestLines(questLines);
+        QuestLineDb.SaveDbChanges();
+
+    }
+
+    private void OpenDeleteDialog(QuestlineMetadata questLine)
+    {
+        _questLineToDelete = questLine.Id;
+        DeleteDialogOpen = true;
+    }
+}

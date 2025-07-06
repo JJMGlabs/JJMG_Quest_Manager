@@ -1,5 +1,4 @@
 using Assets.QuestJournalApplication.QuestJournal;
-using QuestManagerApi.Controllers;
 using QuestManagerSharedResources.Model;
 using QuestManagerSharedResources.QuestSubObjects;
 using QuestProgressionManager.Managers;

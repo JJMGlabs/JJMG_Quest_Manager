@@ -1,11 +1,12 @@
 ﻿using Newtonsoft.Json;
 using QuestManager.Utility;
-using QuestManagerApi.Controllers;
+using QuestManagerClientApi.Controllers;
 using QuestManagerSharedResources;
 using QuestManagerSharedResources.Model;
 using QuestManagerSharedResources.Model.Enums;
 using QuestManagerSharedResources.Model.Utility;
 using QuestManagerSharedResources.QuestSubObjects;
+using QuestProgressionManager.Managers.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -14,15 +15,16 @@ using System.Threading;
 
 namespace QuestProgressionManager.Managers
 {
-    public class QuestProgressionManagerClient
+    public class QuestProgressionManagerClient : IQuestProgressionManagerClient
     {
         private string basePath;
         private List<Quest> _playerQuestData;
         EventWaitHandle _waitHandle;
 
-        private string _sourcDbConnectionPath = null;
+        private string _sourceDbConnectionPath = null;
         private string _sourceDbCollectionName = null;
         private string _questProgressionFilePath;
+        private string _delimiter = null;
 
         public bool AutoSave { get; set; }
 
@@ -31,11 +33,18 @@ namespace QuestProgressionManager.Managers
             Initialise();
         }
 
-        public QuestProgressionManagerClient(string questProgressionFilePath, string sourceDbConnectionPath, string sourceDbCollectionName) : base()
+        public QuestProgressionManagerClient(string questProgressionFilePath, string sourceDbConnectionPath, string sourceDbCollectionName)
+            : this(questProgressionFilePath, sourceDbConnectionPath, sourceDbCollectionName, "")
         {
-            _sourcDbConnectionPath = sourceDbConnectionPath;
+        }
+
+        public QuestProgressionManagerClient(string questProgressionFilePath, string sourceDbConnectionPath, string sourceDbCollectionName,string delimiter)
+        {
+            _sourceDbConnectionPath = sourceDbConnectionPath;
             _sourceDbCollectionName = sourceDbCollectionName;
             _questProgressionFilePath = questProgressionFilePath;
+            _delimiter = delimiter;
+
             Initialise();
         }
 
@@ -144,8 +153,8 @@ namespace QuestProgressionManager.Managers
             if (quest.State == QuestState.COMPLETE)
                 outcome.Accepted = true;
 
-            if(quest.State != QuestState.CURRENT || quest.State != QuestState.ACTIVE)
-            quest.State = QuestState.ACTIVE;
+            if (quest.State != QuestState.CURRENT || quest.State != QuestState.ACTIVE)
+                quest.State = QuestState.ACTIVE;
         }
 
         private void MeasureQuestProgression(List<SubObjectUpdate> measurementUpdates)
@@ -183,7 +192,6 @@ namespace QuestProgressionManager.Managers
         {
             _playerQuestData = new List<Quest>();
 
-            
             if (_playerQuestData == null)
             {
                 _waitHandle.WaitOne();
@@ -237,10 +245,10 @@ namespace QuestProgressionManager.Managers
         private List<Quest> ReadAllAvailableQuestsFromDb()
         {
             List<Quest> dbQuests;
-            if (string.IsNullOrEmpty(_sourcDbConnectionPath) && string.IsNullOrEmpty(_sourceDbCollectionName))
-                dbQuests = LocalDbQuestController.GetAllQuestsFromDatabase();
+            if (string.IsNullOrEmpty(_sourceDbConnectionPath) && string.IsNullOrEmpty(_sourceDbCollectionName))
+                dbQuests = LocalFileDbController.GetFallbackCollectionFromDatabase<Quest>();
             else
-                dbQuests = LocalDbQuestController.GetAllQuestsFromDatabase(_sourcDbConnectionPath, _sourceDbCollectionName);
+                dbQuests = LocalFileDbController.GetCollectionFromDatabase<Quest>(_sourceDbConnectionPath, _sourceDbCollectionName,_delimiter);
 
             if (dbQuests == null || dbQuests.Count == 0)
                 throw new Exception("Failed to retrieve any quests from database");

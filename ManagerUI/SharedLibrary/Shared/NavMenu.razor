@@ -3,10 +3,19 @@
 
         <div class="nav-item">
             <NavLink class="nav-link"  style="@NavMenuIconAlign" href="@Constants.Routes.QuestList" Match="NavLinkMatch.All">
-                <span class="oi oi-home" aria-hidden="true"></span>
+                <span class="oi oi-script" aria-hidden="true"></span>
                 @if (!NavMenuCollapsed)
                 {
                     <nav-link class="nav-link-text">Manage Quests</nav-link>
+                }
+            </NavLink>
+        </div>
+        <div class="nav-item">
+            <NavLink class="nav-link" style="@NavMenuIconAlign" href="@Constants.Routes.QuestLines" Match="NavLinkMatch.All">
+                <span class="oi oi-list-rich" aria-hidden="true"></span>
+                @if (!NavMenuCollapsed)
+                {
+                    <nav-link class="nav-link-text">QuestLines</nav-link>
                 }
             </NavLink>
         </div>
@@ -20,7 +29,7 @@
             </NavLink>
         </div>
 </div>
-<div class=" navbar navbar-expand-lg bg-primary navbar-bottom">
+<div class=" navbar navbar-expand-lg bg-secondary navbar-bottom">
     <button title="Navigation menu" class="btn nav-toggle" @onclick="ToggleNavMenu">
         @if (!NavMenuCollapsed)
         {

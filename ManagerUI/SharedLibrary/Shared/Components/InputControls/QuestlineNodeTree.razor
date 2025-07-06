@@ -1,0 +1,530 @@
+﻿@using QuestManager.Managers.Interfaces
+@using QuestManagerSharedResources.Model
+@using QuestManagerSharedResources.QuestSubObjects
+@using SharedLibrary.Data.Callback
+@using SharedLibrary.Shared.Components.Modal
+
+@inject IQuestlineQuestRelationshipConnection QuestLineManager
+@inject IQuestDbConnection QuestDbConnection
+
+<h3>QuestlineNodeTree</h3>
+
+@if (QuestLineTree != null && QuestLineTree.Count > 0)
+{
+    // Build unique node set and edges
+    var nodeDict = new Dictionary<string, Quest>();
+    var edges = new List<(string from, string to)>();
+    foreach (var path in QuestLineTree)
+    {
+        for (int i = 0; i < path.Count; i++)
+        {
+            var quest = path[i];
+            if (!nodeDict.ContainsKey(quest.Id))
+                nodeDict[quest.Id] = quest;
+            if (i < path.Count - 1)
+                edges.Add((path[i].Id, path[i + 1].Id));
+        }
+    }
+    // Add additional edges for all questline outcomes (for true DAG)
+    foreach (var quest in nodeDict.Values)
+    {
+        if (quest.QuestOutcomes != null)
+        {
+            foreach (var outcome in quest.QuestOutcomes)
+            {
+                if (outcome.isQuestlineOutcome() && outcome.GetQuestlineId() == QuestLineId)
+                {
+                    var toId = outcome.GetQuestIdFromOutcome();
+                    if (!string.IsNullOrEmpty(toId) && nodeDict.ContainsKey(toId))
+                        edges.Add((quest.Id, toId));
+                }
+            }
+        }
+    }
+    // Assign positions: simple layered layout by BFS
+    var nodeLevels = new Dictionary<string, int>();
+    var levelNodes = new Dictionary<int, List<string>>();
+    var visited = new HashSet<string>();
+    var queue = new Queue<(string id, int level)>();
+    // Find roots (nodes with no incoming edges)
+    var allTo = new HashSet<string>(edges.Select(e => e.to));
+    var roots = nodeDict.Keys.Where(id => !allTo.Contains(id)).ToList();
+    foreach (var root in roots)
+        queue.Enqueue((root, 0));
+    while (queue.Count > 0)
+    {
+        var (id, level) = queue.Dequeue();
+        if (visited.Contains(id)) continue;
+        visited.Add(id);
+        nodeLevels[id] = level;
+        if (!levelNodes.ContainsKey(level))
+            levelNodes[level] = new List<string>();
+        levelNodes[level].Add(id);
+        foreach (var edge in edges.Where(e => e.from == id))
+        {
+            if (!visited.Contains(edge.to))
+                queue.Enqueue((edge.to, level + 1));
+        }
+    }
+    // Assign x/y positions
+    var nodePositions = new Dictionary<string, (int x, int y)>();
+    int ySpacing = 100, xSpacing = 120;
+    int svgWidth = 1000;
+    int centerX = svgWidth / 2;
+    foreach (var level in levelNodes.Keys.OrderBy(l => l))
+    {
+        var nodes = levelNodes[level];
+        int count = nodes.Count;
+        if (count > 3)
+        {
+            // Radial layout for more than 3 nodes
+            double radius = 100 + level * 80;
+            double angleStep = 2 * Math.PI / count;
+            for (int i = 0; i < count; i++)
+            {
+                double angle = -Math.PI / 2 + i * angleStep; // Start at top
+                int x = centerX + (int)(radius * Math.Cos(angle));
+                int y = 100 + (int)(radius * Math.Sin(angle));
+                nodePositions[nodes[i]] = (x, y);
+            }
+        }
+        else
+        {
+            // Alternate left/right from center for 3 or fewer nodes
+            int baseY = ySpacing + level * ySpacing;
+            int baseX = centerX;
+            for (int i = 0; i < count; i++)
+            {
+                int offset = ((i % 2 == 0) ? 1 : -1) * ((i + 1) / 2) * xSpacing;
+                int x = baseX + offset;
+                nodePositions[nodes[i]] = (x, baseY);
+            }
+        }
+    }
+
+    @RenderNodeTreeSvg(nodeDict, edges, nodePositions, nodeLevels, levelNodes, xSpacing, ySpacing)
+}
+
+@if (QuestLineTree == null || QuestLineTree.Count == 0)
+{
+    <div style="text-align:center; width:1000px; height:700px; display:flex; align-items:center; justify-content:center;">
+        <svg width="1000" height="700">
+            <g transform="translate(500, 350)" style="cursor:pointer;" @onclick="() => OpenQuestSelectDialog(string.Empty)">
+                <circle cx="0" cy="0" r="20" stroke="black" stroke-width="2" fill="lightgray" />
+                <svg x="-10" y="-10" width="20" height="20" viewBox="0 0 8 8" style="pointer-events:none;">
+                    <path fill="var(--bs-success)" d="M3 0v3H0v2h3v3h2V5h3V3H5V0z" />
+                </svg>
+            </g>
+        </svg>
+    </div>
+}
+
+@if (QuestSelectDialogOpen)
+{
+    <QuestSelectModal Title="Add Quest" OnClose="@CloseQuestSelectDialog"></QuestSelectModal>
+}
+
+@code {
+    [Parameter]
+    public string QuestLineId { get; set; }
+
+    public bool QuestSelectDialogOpen { get; set; }
+
+    private List<List<Quest>> QuestLineTree;
+
+    string prevQuestId = "";
+    string nextQuestId = "";
+    string currentQuestId = "";
+
+    private int yOffset = 70;
+    private int xOffset = 70;
+    private string _questKey = QuestManagerSharedResources.Constants.ReservedMeasurementKeys.OutcomeQuestKey;
+    private string _questlineKey = QuestManagerSharedResources.Constants.ReservedMeasurementKeys.QuestlineIdKey;
+
+    protected override void OnInitialized()
+    {
+        if (string.IsNullOrEmpty(QuestLineId))
+            return;
+
+        QuestLineTree = QuestLineManager.GetQuestline(QuestLineId);
+    }
+
+    private void OnNodeClick(string questId)
+    {
+        currentQuestId = questId;
+        OpenQuestSelectDialog(string.Empty);
+    }
+
+    private void OnLineClick(string fromQuestId, string toQuestId)
+    {
+        prevQuestId = fromQuestId;
+        nextQuestId = toQuestId;
+        OpenQuestSelectDialog(string.Empty);
+    }
+
+    private void OnAddNodeClick(string questId)
+    {
+        prevQuestId = questId;
+        nextQuestId = string.Empty;
+        OpenQuestSelectDialog(string.Empty);
+    }
+
+    private async Task UpdateQuestId(string selectedQuestId)
+    {
+        var selectedQuest = QuestDbConnection.GetQuest(selectedQuestId);
+
+        if (selectedQuest == null)
+            return;
+
+        var currentQuest = QuestDbConnection.GetQuest(currentQuestId);
+        var prevQuest = QuestDbConnection.GetQuest(prevQuestId);
+        var nextQuest = QuestDbConnection.GetQuest(nextQuestId);
+
+        //if currentQuest prev and next are null we are adding the first quest so simply add questline outcome
+        if (currentQuest == null && prevQuest == null && nextQuest == null)
+        {
+            AddQuestOutcomeToQuest(selectedQuest, "", QuestLineId);
+            QuestDbConnection.SaveQuestDbChanges();
+            ResetSelection();
+            return;
+        }
+
+        // current and selected are the same id do nothing
+        if (currentQuest != null && selectedQuest != null && currentQuest.Id == selectedQuest.Id)
+        {
+            ResetSelection();
+            return;
+        }
+
+        var questline = QuestLineManager.GetQuestline(QuestLineId);
+
+
+        //if selected and prev are not null but next is null this is an add new line scenario
+        if (currentQuest == null && prevQuest != null && selectedQuest != null && nextQuest == null)
+        {
+            RemoveQuestOutcomeFromQuest(prevQuest, string.Empty, QuestLineId);
+            QuestDbConnection.SaveQuestDbChanges();
+            AddQuestOutcomeToQuest(prevQuest, selectedQuest.Id, QuestLineId);
+            QuestDbConnection.SaveQuestDbChanges();
+            AddQuestOutcomeToQuest(selectedQuest, string.Empty, QuestLineId);
+            QuestDbConnection.SaveQuestDbChanges();
+            ResetSelection();
+            return;
+        }
+
+        //if current is not null but prev and next is this is a dot scenario so we:
+        if (currentQuest != null && prevQuest == null && nextQuest == null)
+        {
+            UpdateNode(questline, prevQuest, nextQuest, currentQuest, selectedQuest);
+            QuestDbConnection.SaveQuestDbChanges();
+            ResetSelection();
+            return;
+        }
+
+        //if current is null but prev and next are not this is a line scenario so we:
+        if (currentQuest == null && prevQuest != null && nextQuest != null)
+        {
+            // 1. set prev to target selected
+            ReplaceQuestOutcomeFromQuest(prevQuest, nextQuest.Id, QuestLineId, !string.IsNullOrEmpty(selectedQuest?.Id) ? selectedQuest.Id : "");
+            QuestDbConnection.SaveQuestDbChanges();
+            // 2. set selected to target next
+            AddQuestOutcomeToQuest(selectedQuest, nextQuest.Id, QuestLineId);
+            QuestDbConnection.SaveQuestDbChanges();
+            ResetSelection();
+            return;
+        }
+    }
+
+    private void ResetSelection()
+    {
+        prevQuestId = string.Empty;
+        nextQuestId = string.Empty;
+        currentQuestId = string.Empty;
+    }
+
+    private void UpdateNode(List<List<Quest>> questline, Quest prevQuest, Quest nextQuest, Quest currentQuest, Quest newCurrentQuest)
+    {
+        if (questline == null || questline.Count == 0)
+            return;
+
+        // 1. get the quest in the questline which has this as outcome
+        prevQuest = (from q in questline
+                     from o in q
+                     where o.QuestOutcomes != null && o.QuestOutcomes.Any(x => x.GetQuestlineId() == currentQuest.Id)
+                     select o).FirstOrDefault();
+
+        // 2. get the quest in the questline which the current targets as an outcome
+        nextQuest = QuestDbConnection.GetQuest(currentQuest.QuestOutcomes?.FirstOrDefault(x => x.GetQuestlineId() == currentQuest.Id)?.GetQuestIdFromOutcome());
+
+        // 3. set the quest targeting current/prev to target selected
+        ReplaceQuestOutcomeFromQuest(prevQuest, currentQuest.Id, QuestLineId, newCurrentQuest.Id);
+
+        // 4. current to no longer target next
+        RemoveQuestOutcomeFromQuest(currentQuest, nextQuest.Id, QuestLineId);
+        // 5. set selected to target next
+        AddQuestOutcomeToQuest(newCurrentQuest, nextQuest.Id, QuestLineId);
+    }
+
+
+    private void AddQuestOutcomeToQuest(Quest quest, string outcomeQuest, string outcomeQuestline)
+    {
+        if (quest == null || string.IsNullOrEmpty(outcomeQuestline))
+            return;
+
+        var existingOutcomes = quest.QuestOutcomes?.Where(x => x.isQuestlineOutcome() && x.GetQuestlineId() == outcomeQuestline);
+
+        //first check if the outcome already exists
+        var outcome = existingOutcomes?.FirstOrDefault(x => x.GetQuestIdFromOutcome() == outcomeQuest);
+        //nothing to be done
+        if (outcome != null)
+            return;
+
+        outcome = new QuestOutcome();
+
+        outcome.DeliveryMetadata = new Dictionary<string, string>();
+        outcome.DeliveryMetadata.Add(_questKey, outcomeQuest);
+        outcome.DeliveryMetadata.Add(_questlineKey, outcomeQuestline);
+
+        quest.AddSubObject<QuestOutcome>(outcome);
+
+        if (string.IsNullOrEmpty(outcomeQuest))
+        {
+            var outcomeQuestObject = QuestDbConnection.GetQuest(outcomeQuest);
+
+            AddQuestOutcomeToQuest(outcomeQuestObject, "", QuestLineId);
+        }
+
+        QuestDbConnection.UpdateQuest(quest);
+    }
+
+    private void RemoveQuestOutcomeFromQuest(Quest quest, string outcomeQuestId, string outcomeQuestlineId)
+    {
+
+        var existingOutcome = quest.QuestOutcomes.FirstOrDefault(x =>
+            x.isQuestlineOutcome() &&
+            (x.GetQuestIdFromOutcome() == outcomeQuestId || x.GetQuestIdFromOutcome() == null) &&
+            x.GetQuestlineId() == outcomeQuestlineId);
+
+        if (existingOutcome == null)
+            return;
+
+        quest.RemoveSubObject<QuestOutcome>(existingOutcome.Id);
+
+        QuestDbConnection.UpdateQuest(quest);
+    }
+
+    private void ReplaceQuestOutcomeFromQuest(Quest quest, string outcomeQuest, string outcomeQuestline, string newOutcomeQuest)
+    {
+        var existingOutcome = quest.QuestOutcomes.FirstOrDefault(x => x.isQuestlineOutcome() && x.GetQuestIdFromOutcome() == outcomeQuest && x.GetQuestlineId() == outcomeQuestline);
+        if (existingOutcome == null)
+            return;
+
+        var outcomeQuestObj = QuestDbConnection.GetQuest(newOutcomeQuest);
+
+        if (outcomeQuestObj == null)
+            return;
+
+        quest.RemoveSubObject<QuestOutcome>(existingOutcome.Id);
+
+        //Before we remove the quest kwy we need to check all outcomes and do one of the following
+        var currentOutcomeQuest = QuestDbConnection.GetQuest(existingOutcome.GetQuestIdFromOutcome());
+        var outcomes = currentOutcomeQuest?.QuestOutcomes?.Where(x => x.isQuestlineOutcome() && x.GetQuestlineId() == QuestLineId).ToList();
+        string outcomeId = string.Empty;
+        //1. if there is one outcome with no id we remove it with an id we hold it
+        if (outcomes != null && outcomes.Count == 1)
+        {
+            var outcome = outcomes.FirstOrDefault(x => !string.IsNullOrEmpty(x.GetQuestIdFromOutcome()));
+            if (outcome != null)
+                outcomeId = outcome.GetQuestIdFromOutcome();
+
+            currentOutcomeQuest.RemoveSubObject<QuestOutcome>(outcomes.First().Id);
+        }
+        else if (outcomes.Count > 1)
+        {
+            //2. if there are multiple outcomes we need to remove one with no id or leave them all
+            var outcome = outcomes.FirstOrDefault(x => string.IsNullOrEmpty(x.GetQuestIdFromOutcome()));
+            if (outcome != null)
+                currentOutcomeQuest.RemoveSubObject<QuestOutcome>(outcome.Id);
+        }
+
+
+    existingOutcome.DeliveryMetadata.Remove(_questKey);
+        existingOutcome.DeliveryMetadata.Add(_questKey, newOutcomeQuest);
+        quest.QuestOutcomes.Add(existingOutcome);
+
+        AddQuestOutcomeToQuest(outcomeQuestObj, outcomeId, QuestLineId);
+
+        QuestDbConnection.UpdateQuest(quest);
+    }
+
+    private async void CloseQuestSelectDialog(DialogCallback<string> callback)
+    {
+        QuestSelectDialogOpen = false;
+
+        if (callback == null || string.IsNullOrEmpty(callback.CallbackObject))
+            return;
+
+        await UpdateQuestId(callback.CallbackObject);
+    }
+
+    private void OpenQuestSelectDialog(string questId)
+    {
+        QuestSelectDialogOpen = true;
+    }
+
+    // --- UI rendering helpers ---
+    RenderFragment RenderNodeTreeSvg(
+        Dictionary<string, Quest> nodeDict,
+        List<(string from, string to)> edges,
+        Dictionary<string, (int x, int y)> nodePositions,
+        Dictionary<string, int> nodeLevels,
+        Dictionary<int, List<string>> levelNodes,
+        int xSpacing,
+        int ySpacing
+    ) => __builder =>
+    {
+        <svg width="1000" height="700">
+            @RenderEdges(edges, nodePositions)
+            @RenderDefs()
+            @RenderNodes(nodeDict, nodePositions)
+            @RenderPlusNodes(nodeDict, edges, nodePositions, nodeLevels, levelNodes, xSpacing, ySpacing)
+            @RenderNewRootPlus(levelNodes, xSpacing, ySpacing)
+        </svg>;
+    };
+
+    RenderFragment RenderNodes(Dictionary<string, Quest> nodeDict, Dictionary<string, (int x, int y)> nodePositions) => __builder =>
+    {
+        // Find root nodes (level 0)
+        var rootIds = nodePositions.Keys.Where(id => nodePositions[id].y == 100).ToHashSet();
+        foreach (var node in nodeDict.Values)
+        {
+            var (x, y) = nodePositions[node.Id];
+            bool isRoot = rootIds.Contains(node.Id);
+            string fillColor = isRoot ? "var(--bs-warning)" : "var(--bs-info)";
+            // Remove border by setting stroke to 'none'
+            <g>
+                <circle cx="@x" cy="@y" r="20" stroke="none" stroke-width="0" fill="@fillColor" @onclick="() => OnNodeClick(node.Id)" />
+                <text x="@(x + 28)" y="@y" text-anchor="start" dy=".3em" fill="#fff">@node.Id</text>
+            </g>
+        }
+    };
+
+    RenderFragment RenderEdges(List<(string from, string to)> edges, Dictionary<string, (int x, int y)> nodePositions) => __builder =>
+    {
+        foreach (var edge in edges.Distinct())
+        {
+            if (nodePositions.ContainsKey(edge.from) && nodePositions.ContainsKey(edge.to))
+            {
+                var (x1, y1) = nodePositions[edge.from];
+                var (x2, y2) = nodePositions[edge.to];
+                <line x1="@x1" y1="@y1" x2="@x2" y2="@y2" stroke="var(--bs-light)" marker-end="url(#arrow)" />
+                // Plus icon at center
+                double midX = (x1 + x2) / 2.0;
+                double midY = (y1 + y2) / 2.0;
+                <g transform="translate(@midX, @midY)" style="cursor:pointer;" @onclick="() => OnLineClick(edge.from, edge.to)">
+                    <svg x="-10" y="-10" width="20" height="20" viewBox="0 0 8 8" style="pointer-events:none;">
+                        <path fill="var(--bs-success)" d="M3 0v3H0v2h3v3h2V5h3V3H5V0z" />
+                    </svg>
+                </g>
+            }
+        }
+    };
+
+    RenderFragment RenderDefs() => __builder =>
+    {
+        <defs>
+            <marker id="arrow" markerWidth="10" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="strokeWidth">
+                <path d="M0,0 L10,5 L0,10 L2,5 Z" fill="black" />
+            </marker>
+        </defs>;
+    };
+
+    RenderFragment RenderPlusNodes(
+        Dictionary<string, Quest> nodeDict,
+        List<(string from, string to)> edges,
+        Dictionary<string, (int x, int y)> nodePositions,
+        Dictionary<string, int> nodeLevels,
+        Dictionary<int, List<string>> levelNodes,
+        int xSpacing,
+        int ySpacing
+    ) => __builder =>
+    {
+        int svgWidth = 1000;
+        int centerX = svgWidth / 2;
+        var plusNodeCountAtLevel = new Dictionary<int, int>();
+        var usedPositionsAtLevel = new Dictionary<int, HashSet<int>>();
+        // Precompute used slot indices for each level
+        foreach (var kvp in levelNodes)
+        {
+            int level = kvp.Key;
+            var nodes = kvp.Value;
+            if (!usedPositionsAtLevel.ContainsKey(level))
+                usedPositionsAtLevel[level] = new HashSet<int>();
+            for (int i = 0; i < nodes.Count; i++)
+                usedPositionsAtLevel[level].Add(i);
+        }
+        foreach (var node in nodeDict.Values)
+        {
+            var (x, y) = nodePositions[node.Id];
+            int parentLevel = nodeLevels[node.Id];
+            int plusLevel = parentLevel + 1;
+            if (!plusNodeCountAtLevel.ContainsKey(plusLevel))
+                plusNodeCountAtLevel[plusLevel] = 0;
+            if (!usedPositionsAtLevel.ContainsKey(plusLevel))
+                usedPositionsAtLevel[plusLevel] = new HashSet<int>();
+            int count = (levelNodes.ContainsKey(plusLevel) ? levelNodes[plusLevel].Count : 0) + 1; // +1 for the new plus node
+            int slot = 0;
+            // Find the first unused slot index
+            while (usedPositionsAtLevel[plusLevel].Contains(slot))
+                slot++;
+            usedPositionsAtLevel[plusLevel].Add(slot);
+            plusNodeCountAtLevel[plusLevel]++;
+            int plusX, plusY;
+            if (count > 3)
+            {
+                // Radial layout for more than 3 nodes
+                double radius = 100 + plusLevel * 80;
+                double angleStep = 2 * Math.PI / count;
+                double angle = -Math.PI / 2 + slot * angleStep;
+                plusX = centerX + (int)(radius * Math.Cos(angle));
+                plusY = 100 + (int)(radius * Math.Sin(angle));
+            }
+            else
+            {
+                // Alternate left/right from center for 3 or fewer nodes
+                int baseY = ySpacing + plusLevel * ySpacing;
+                int baseX = centerX;
+                int offset = ((slot % 2 == 0) ? 1 : -1) * ((slot + 1) / 2) * xSpacing;
+                plusX = baseX + offset;
+                plusY = baseY;
+            }
+            double dx = plusX - x;
+            double dy = plusY - y;
+            double length = Math.Sqrt(dx * dx + dy * dy);
+            double startX = x + (length > 0 ? dx / length * 20 : 0);
+            double startY = y + (length > 0 ? dy / length * 20 : 0);
+            <line x1="@startX" y1="@startY" x2="@plusX" y2="@plusY" stroke="var(--bs-light)" stroke-dasharray="4" />
+            <g transform="translate(@plusX, @plusY)">
+                <circle cx="0" cy="0" r="20" stroke="none" stroke-width="0" fill="lightgray" @onclick="() => OnAddNodeClick(node.Id)" />
+                <svg x="-10" y="-10" width="20" height="20" viewBox="0 0 8 8" style="pointer-events:none;">
+                    <path fill="var(--bs-success)" d="M3 0v3H0v2h3v3h2V5h3V3H5V0z" />
+                </svg>
+            </g>
+        }
+    };
+
+    RenderFragment RenderNewRootPlus(Dictionary<int, List<string>> levelNodes, int xSpacing, int ySpacing) => __builder =>
+    {
+        var rootLevel = 0;
+        var rootNodes = levelNodes.ContainsKey(rootLevel) ? levelNodes[rootLevel] : new List<string>();
+        int newRootIndex = rootNodes.Count;
+        int newRootX = xSpacing + newRootIndex * xSpacing;
+        int newRootY = ySpacing;
+        <g transform="translate(@newRootX, @newRootY)">
+            <circle cx="0" cy="0" r="20" stroke="none" stroke-width="0" fill="lightgray" @onclick="() => OpenQuestSelectDialog(string.Empty)" />
+            <svg x="-10" y="-10" width="20" height="20" viewBox="0 0 8 8" style="pointer-events:none;">
+                <path fill="var(--bs-success)" d="M3 0v3H0v2h3v3h2V5h3V3H5V0z" />
+            </svg>
+        </g>;
+    };
+}

@@ -1,10 +1,12 @@
 ﻿@page "/"
 
+@using QuestManager.Managers.Interfaces
 @using QuestManagerSharedResources.Model
 @using SharedLibrary.Data
 @using SharedLibrary.Data.Callback
 @using SharedLibrary.Data.Enum
 @using SharedLibrary.Shared.Components
+@using SharedLibrary.Shared.Components.Modal
 @inject IQuestDbConnection QuestDbConnection
 @inject NavigationManager NavigationManager
 
@@ -65,16 +67,33 @@ else
     <ModalDialog Title="Delete Quest" Text="Delete name of quest?" OnClose="@CloseDeleteDialog"></ModalDialog>
 }
 
+@if (!string.IsNullOrEmpty(_errorModalMessage))
+{
+     <ModalDialog Title="An Error Occured" Text=@_errorModalMessage OnClose="@CloseErrorDialog" DialogType="ModalDialog.ModalDialogType.Ok"></ModalDialog>
+}
+
 @code {
 
-    public bool DeleteDialogOpen { get; set; }
+    public bool DeleteDialogOpen { get; set; }    
     private string _questToDelete;
+
+    private string _errorModalMessage;
 
     private List<Quest>? quests;
 
+
     protected override async Task OnInitializedAsync()
     {
-        quests = QuestDbConnection.GetAllQuests();
+        try
+        {
+            quests = QuestDbConnection.GetAllQuests();
+        }
+        catch (Exception e)
+        {
+            //quests will remain null and we just show somthing went wrong
+            _errorModalMessage = e.Message;
+        }
+
     }
 
     private void CreateNewQuest()
@@ -109,6 +128,11 @@ else
         QuestDbConnection.DeleteQuest(_questToDelete);
         QuestDbConnection.SaveQuestDbChanges();
         quests = QuestDbConnection.GetAllQuests();
+    }
+
+    private void CloseErrorDialog()
+    {
+        _errorModalMessage = "";
     }
 
     private void OpenDeleteDialog(Quest quest)

@@ -1,0 +1,100 @@
+﻿@page "/questLineForm"
+
+@using Microsoft.AspNetCore.Components.Forms
+@using QuestManager.Managers.Interfaces
+@using QuestManagerSharedResources.Model
+@using SharedLibrary.Shared.Components
+@using SharedLibrary.Shared.Components.InputControls
+@inject NavigationManager NavigationManager
+@inject IQuestDbConnection QuestDbConnection
+@inject IQuestlineDbConnection QuestLineDb
+
+<div class="container container-spacing">
+    <h3>QuestLineForm</h3>
+
+    <div class="form-flex-container">
+        <EditForm EditContext="@EditContext">
+            <div class="flex-item">
+                <div class="container container-spacing">
+                    <div class="form-group">
+                        <label for="name" class="form-label">Name</label>
+                        <input id="name" @bind="DialogTargetQuestLine.Name" class="form-control input-textbox" type="text" placeholder="Quest Name">
+                    </div>
+                </div>
+                <div class="container container-spacing">
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <input @bind="DialogTargetQuestLine.Description" class="form-control input-textbox" type="text" placeholder="Questline Description">
+                    </div>
+                </div>
+                <div class="container container-spacing">
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <QuestlineNodeTree QuestLineId=@DialogTargetQuestLine.Id />
+                    </div>
+                </div>
+            </div>
+            <DictionaryInput @bind-dictionary="@DialogTargetQuestLine.Metadata" Label="Additional Metadata" />
+        </EditForm>
+    </div>
+    <div style="padding-top:50px">
+        <button type="button" class="btn btn-secondary" @onclick=@CloseForm>Cancel</button>
+        <button type="button" class="btn btn-primary" @onclick=@SaveAndClose>Save</button>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "callingPage")]
+    public string CallingPagePath { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "questLineId")]
+    public string QuestLineId { get; set; }
+
+
+    private EditContext EditContext;
+    public QuestlineMetadata DialogTargetQuestLine;
+
+    private List<QuestlineMetadata> _questlines;
+
+    protected override void OnInitialized()
+    {
+        _questlines = QuestLineDb.GetQuestlines();
+
+        if (!string.IsNullOrEmpty(QuestLineId))
+            DialogTargetQuestLine = _questlines.FirstOrDefault(q => q.Id == QuestLineId);
+
+        if (DialogTargetQuestLine == null)
+            DialogTargetQuestLine = new QuestlineMetadata();
+
+        EditContext = new EditContext(DialogTargetQuestLine);
+
+        base.OnInitialized();
+    }
+
+    private void CloseForm()
+    {
+        if (string.IsNullOrEmpty(CallingPagePath))
+            NavigationManager.NavigateTo("/");
+
+        NavigationManager.NavigateTo(CallingPagePath);
+    }
+
+    private void SaveAndClose()
+    {
+        if (!string.IsNullOrEmpty(QuestLineId))
+        {
+            _questlines.Remove(_questlines.FirstOrDefault(q => q.Id == QuestLineId));
+            _questlines.Add(DialogTargetQuestLine);
+            QuestLineDb.WriteQuestLines(_questlines);
+        }
+        else
+        {
+            QuestLineDb.CreateQuestLine(DialogTargetQuestLine);
+        }
+
+        QuestLineDb.SaveDbChanges();
+        CloseForm();
+    }
+}

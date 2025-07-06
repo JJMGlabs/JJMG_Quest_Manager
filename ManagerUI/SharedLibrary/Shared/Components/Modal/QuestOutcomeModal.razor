@@ -4,6 +4,7 @@
 @using QuestManagerSharedResources.QuestSubObjects
 @using SharedLibrary.Data.Callback
 @using SharedLibrary.Data.Enum
+@using SharedLibrary.Shared.Components.InputControls
 
 @inherits QuestSubObjectModal
 
@@ -61,7 +62,6 @@
 
             </div>
             <DictionaryInput @bind-dictionary="@questOutcome.DeliveryMetadata" Label="Delivery Metadata" />
-            <p style="font-style:italic; font-weight:600;">Setting an Outcome to deliver a quest will make the values below dormant</p>
             <OutcomeQuestInput @bind-dictionary="@questOutcome.DeliveryMetadata" />
         };
         base.OnInitialized();

@@ -2,33 +2,35 @@
 
 namespace QuestManagerTests.Builders
 {
-    public class DbConnectionOptionsBuilder : DbConnectionOptions
+
+    //TODO ajust for support of multiple option in other tests
+    public class QuestDbConnectionOptionsBuilder : DbConnectionOptions
     {        
         private string _basePath;
         private string _dbName;
         private string _collectionName;
 
-        public DbConnectionOptionsBuilder SetConnectionBasePath(string basePath)
+        public QuestDbConnectionOptionsBuilder SetConnectionBasePath(string basePath)
         {
             _basePath = basePath;
             return this;
         }
 
-        public DbConnectionOptionsBuilder SetDbName(string dbName)
+        public QuestDbConnectionOptionsBuilder SetDbName(string dbName)
         {
             _dbName = dbName;
             return this;
         }
 
-        public DbConnectionOptionsBuilder SetCollectionName(string collectionName)
+        public QuestDbConnectionOptionsBuilder SetCollectionName(string collectionName)
         {
             _collectionName = collectionName;
             return this;
         }
 
-        public DbConnectionOptions Build()
+        public QuestDbConnectionOptions Build()
         {
-            return new DbConnectionOptions()
+            return new QuestDbConnectionOptions()
             {
                 BasePath = _basePath,
                 DbName = _dbName,

@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using QuestManager.Configuration;
 using QuestManager.Managers;
+using QuestManager.Managers.Interfaces;
 using SharedLibrary.Data.Configuration;
 
 namespace SharedLibrary
@@ -10,9 +11,11 @@ namespace SharedLibrary
     {
         public static void AddSharedLibrary(this IServiceCollection services, ConfigurationManager configuration)
         {
-            services.ConfigureWritable<DbConnectionOptions>(configuration.GetSection(Constants.QuestDbConfigurationSection));
-
+            services.ConfigureWritable<QuestDbConnectionOptions>(configuration.GetSection(Constants.QuestDbConfigurationSection), Constants.QuestDbConfigurationSection);
+            services.ConfigureWritable<QuestLineDbConnectionOptions>(configuration.GetSection(Constants.QuestLineDbConfigurationSection), Constants.QuestLineDbConfigurationSection);
             services.AddScoped<IQuestDbConnection, QuestDbConnection>();
+            services.AddScoped<IQuestlineDbConnection, QuestlineDbConnection>();
+            services.AddScoped<IQuestlineQuestRelationshipConnection, QuestlineDbConnection>();
         }
     }
 }
