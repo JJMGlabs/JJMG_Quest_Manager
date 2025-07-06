@@ -18,7 +18,6 @@ namespace QuestProgressionManager.Managers
         {
             _progressionClient = progressionClient;
         }
-
         public List<Quest> GetNextQuestInQuestline(Quest quest, string questlineId)
         {
             var result = new List<Quest>();
