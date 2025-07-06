@@ -21,7 +21,7 @@ namespace QuestProgressionManager.Managers
         private List<Quest> _playerQuestData;
         EventWaitHandle _waitHandle;
 
-        private string _sourcDbConnectionPath = null;
+        private string _sourceDbConnectionPath = null;
         private string _sourceDbCollectionName = null;
         private string _questProgressionFilePath;
         private string _delimiter = null;
@@ -33,9 +33,14 @@ namespace QuestProgressionManager.Managers
             Initialise();
         }
 
-        public QuestProgressionManagerClient(string questProgressionFilePath, string sourceDbConnectionPath, string sourceDbCollectionName,string delimiter) : base()
+        public QuestProgressionManagerClient(string questProgressionFilePath, string sourceDbConnectionPath, string sourceDbCollectionName)
+            : this(questProgressionFilePath, sourceDbConnectionPath, sourceDbCollectionName, "")
         {
-            _sourcDbConnectionPath = sourceDbConnectionPath;
+        }
+
+        public QuestProgressionManagerClient(string questProgressionFilePath, string sourceDbConnectionPath, string sourceDbCollectionName,string delimiter)
+        {
+            _sourceDbConnectionPath = sourceDbConnectionPath;
             _sourceDbCollectionName = sourceDbCollectionName;
             _questProgressionFilePath = questProgressionFilePath;
             _delimiter = delimiter;
@@ -241,10 +246,10 @@ namespace QuestProgressionManager.Managers
         private List<Quest> ReadAllAvailableQuestsFromDb()
         {
             List<Quest> dbQuests;
-            if (string.IsNullOrEmpty(_sourcDbConnectionPath) && string.IsNullOrEmpty(_sourceDbCollectionName))
+            if (string.IsNullOrEmpty(_sourceDbConnectionPath) && string.IsNullOrEmpty(_sourceDbCollectionName))
                 dbQuests = LocalFileDbController.GetFallbackCollectionFromDatabase<Quest>();
             else
-                dbQuests = LocalFileDbController.GetCollectionFromDatabase<Quest>(_sourcDbConnectionPath, _sourceDbCollectionName,_delimiter);
+                dbQuests = LocalFileDbController.GetCollectionFromDatabase<Quest>(_sourceDbConnectionPath, _sourceDbCollectionName,_delimiter);
 
             if (dbQuests == null || dbQuests.Count == 0)
                 throw new Exception("Failed to retrieve any quests from database");
