@@ -18,7 +18,7 @@ namespace QuestProgressionManager.Managers
         {
             _progressionClient = progressionClient;
         }
-        //TODO instead search by questline id all quests and perform a sort based on which outcomes lead to which quests
+
         public List<Quest> GetNextQuestInQuestline(Quest quest, string questlineId)
         {
             var result = new List<Quest>();

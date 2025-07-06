@@ -37,7 +37,6 @@ namespace QuestManager.Managers
 
         public ResponseStatus SaveQuestDbChanges()
         {
-            //TODO modify this to write to the file a the same data surrounded by _rootobject as a delimiter 
             var questsToSave = JsonConvert.SerializeObject(GetAllQuests(), new JsonSerializerSettings
             {
                 ContractResolver = new JsonReadOnlyPropertiesResolver()
