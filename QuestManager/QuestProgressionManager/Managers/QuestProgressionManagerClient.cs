@@ -192,7 +192,6 @@ namespace QuestProgressionManager.Managers
         {
             _playerQuestData = new List<Quest>();
 
-
             if (_playerQuestData == null)
             {
                 _waitHandle.WaitOne();
