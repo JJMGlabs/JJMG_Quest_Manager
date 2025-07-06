@@ -1,0 +1,100 @@
+﻿@using Microsoft.AspNetCore.Components.Forms
+@using System.ComponentModel.DataAnnotations
+<div class="form-group">
+    <label class="form-label">@Label</label>
+    <input @bind="dictionaryKey" class="form-control" @oninput="UpdateDictionaryKey" placeholder="key">
+    <input @bind="dictionaryValue" class="form-control" @oninput="UpdateDictionaryValue" placeholder="value">
+    <button class="btn btn-primary" @onclick="AddItem">Add</button>
+</div>
+
+<ul>
+    @foreach (var item in dictionary)
+    {
+        @if (item.Key != QuestManagerSharedResources.Constants.ReservedMeasurementKeys.OutcomeQuestKey)
+        {
+            <li>
+                @item.Key : @item.Value
+            <button class="btn btn-danger" @onclick="() => RemoveItem(item.Key)">Remove</button>
+        </li>
+        }
+    }
+</ul>
+
+<ul>
+    @foreach (var error in dictionaryValueErrors)
+    {
+        <p style="color:red">@error</p>
+    }
+</ul>
+
+@code {
+    [Parameter]
+    public Dictionary<string, string> dictionary { get; set; }
+
+    [Parameter]
+    public string Label { get; set; }
+
+    [Parameter]
+    public EventCallback<Dictionary<string, string>> dictionaryChanged { get; set; }
+    private string dictionaryValue = "";
+    private string dictionaryKey = "";
+
+    private List<string> dictionaryValueErrors;
+
+    protected override void OnInitialized()
+    {
+        if (dictionary == null)
+        {
+            this.dictionary = new Dictionary<string, string>();
+            dictionaryChanged.InvokeAsync(dictionary).Wait();
+        }
+
+        dictionaryValueErrors = new List<string>();
+    }
+
+    private async Task UpdateDictionaryValue(ChangeEventArgs e)
+    {
+        dictionaryValue = e.Value.ToString();
+    }
+
+    private async Task UpdateDictionaryKey(ChangeEventArgs e)
+    {
+        dictionaryKey = e.Value.ToString();
+    }
+
+    private async Task AddItem()
+    {
+        dictionaryValueErrors.Clear();
+
+        if (string.IsNullOrEmpty(dictionaryKey))
+        {
+            dictionaryValueErrors.Add("A key is required in order to add to dictionary");
+            return;
+        }
+
+        if (dictionaryKey == QuestManagerSharedResources.Constants.ReservedMeasurementKeys.OutcomeQuestKey)
+        {
+            dictionaryValueErrors.Add("This Key is system reserved");
+            return;
+        }
+
+
+        if (dictionary.ContainsKey(dictionaryKey))
+            dictionary[dictionaryKey] = dictionaryValue;
+        else
+        {
+            dictionary.Add(dictionaryKey, dictionaryValue);
+            dictionaryValue = "";
+            dictionaryKey = "";
+        }
+
+        await dictionaryChanged.InvokeAsync(dictionary);
+
+    }
+
+    private async Task RemoveItem(string key)
+    {
+        dictionary.Remove(key);
+        await dictionaryChanged.InvokeAsync(dictionary);
+    }
+}

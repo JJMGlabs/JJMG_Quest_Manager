@@ -1,0 +1,53 @@
+﻿@using Microsoft.AspNetCore.Components.Forms
+@using System.ComponentModel.DataAnnotations
+<div class="form-group">
+    <label class="form-label">Results In Quest</label>
+    <input @bind="questId " class="form-control" @oninput="UpdateQuestId" placeholder="Quest Id">
+</div>
+
+
+@code {
+    [Parameter]
+    public Dictionary<string, string> dictionary { get; set; }
+
+    [Parameter]
+    public EventCallback<Dictionary<string, string>> dictionaryChanged { get; set; }
+
+    private string questId = "";
+
+    private string key = QuestManagerSharedResources.Constants.ReservedMeasurementKeys.OutcomeQuestKey;
+
+    protected override void OnInitialized()
+    {
+        if (dictionary == null)
+        {
+            this.dictionary = new Dictionary
+    <string, string>();
+            dictionaryChanged.InvokeAsync(dictionary).Wait();
+        }
+        else
+        {
+            if (dictionary.ContainsKey(QuestManagerSharedResources.Constants.ReservedMeasurementKeys.OutcomeQuestKey))
+                questId = dictionary[QuestManagerSharedResources.Constants.ReservedMeasurementKeys.OutcomeQuestKey];
+        }
+    }
+
+    private async Task UpdateQuestId(ChangeEventArgs e)
+    {
+        questId = e.Value.ToString();
+
+        if (!string.IsNullOrEmpty(questId))
+        {
+            if (dictionary.ContainsKey(key))
+                dictionary[key] = questId;
+            else
+                dictionary.Add(key, questId);
+        }
+        else if (dictionary.ContainsKey(key))
+            dictionary.Remove(key);
+
+        questId = "";
+
+        await dictionaryChanged.InvokeAsync(dictionary);
+    }
+}

@@ -57,6 +57,10 @@ a {
 
 }
 
+.errorLabel {
+    color: var(--bs-form-invalid-color);
+}
+
 // Main page wrapper
 #wrapper {
     display: flex;

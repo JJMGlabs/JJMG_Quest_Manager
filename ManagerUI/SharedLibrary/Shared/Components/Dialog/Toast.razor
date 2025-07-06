@@ -1,0 +1,52 @@
+﻿@code {
+    private List<ToastMessage> messages = new List<ToastMessage>();
+
+    public void Show(string message, string cssClass = "alert-danger")
+    {
+        var id = Guid.NewGuid();
+        messages.Add(new ToastMessage { Id = id, Message = message, CssClass = cssClass });
+        StateHasChanged();
+    }
+
+    public void Hide(Guid id)
+    {
+        var message = messages.FirstOrDefault(m => m.Id == id);
+        if (message != null)
+        {
+            messages.Remove(message);
+            StateHasChanged();
+        }
+    }
+
+    private class ToastMessage
+    {
+        public Guid Id { get; set; }
+        public string Message { get; set; }
+        public string CssClass { get; set; }
+    }
+}
+
+@if (messages.Any())
+{
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        @foreach (var message in messages)
+        {
+            <div class="toast show mb-2" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-header @message.CssClass">
+                    <strong class="me-auto @message.CssClass">@message.Message</strong>
+                    <button type="button" class="btn-close" @onclick="() => Hide(message.Id)" aria-label="Close"></button>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+<style>
+    .toast-container {
+        z-index: 1050;
+    }
+
+    .toast {
+        margin-bottom: 0.5rem;
+    }
+</style>

@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Options;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using QuestManagerSharedResources.Model;
+using QuestManagerSharedResources.QuestSubObjects;
 using QuestManagerTests.Builders;
 using System;
 using System.Collections.Generic;
@@ -14,7 +15,7 @@ namespace QuestManager.Managers.Tests
     {
         private static QuestDbConnection ArrangeConnection()
         {
-            var dbOptions = new DbConnectionOptionsBuilder()
+            var dbOptions = new QuestDbConnectionOptionsBuilder()
                 .SetConnectionBasePath(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.Create))
                 .SetDbName(@"\JJMGquestManager")
                 .SetCollectionName(@"\questDb.json")
@@ -62,6 +63,36 @@ namespace QuestManager.Managers.Tests
             QuestDbConnection sut = ArrangeConnection();
             var result = sut.SaveQuestDbChanges();
             Assert.IsTrue(result.IsSuccess);
+        }
+
+        [TestMethod()]
+        public void SaveQuestDbChanges_ValidateDataOnNextReadTest()
+        {
+            QuestDbConnection sut = ArrangeConnection();
+
+            var quests = new List<Quest>() {
+                new Quest() { Name = "test 1" },
+                new Quest() { Name = "test 2" },
+                new Quest() { Name = "test 3" },
+            };
+
+            quests[0].AddSubObject(new QuestMeasurement() { Name = "Name" });
+
+            var overwriteResult = sut.OverwriteAllQuests(quests);
+            Assert.IsTrue(overwriteResult.Count == quests.Count);
+
+
+            var result = sut.SaveQuestDbChanges();
+            Assert.IsTrue(result.IsSuccess);
+
+            sut = null;
+            sut = ArrangeConnection();
+
+            var savedQuests = sut.GetAllQuests();
+
+            Assert.AreEqual(quests.Count, savedQuests.Count);
+            Assert.AreEqual(quests[0].Name, savedQuests[0].Name);
+            Assert.AreEqual(quests[0].QuestMeasurements[0].Name, savedQuests[0].QuestMeasurements[0].Name);
         }
 
         [TestMethod()]

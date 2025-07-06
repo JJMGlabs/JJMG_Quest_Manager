@@ -1,0 +1,5 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xmlns="UnityEngine.UIElements" ue="UnityEditor.UIElements" editor-extension-mode="False">
+    <ui:Box style="flex-direction: row; background-color: rgba(56, 56, 56, 0);">
+        <ui:Label tabindex="-1" name="QuestName" text="Label" parse-escape-sequences="true" display-tooltip-when-elided="true" binding-path="name" />
+    </ui:Box>
+</ui:UXML>

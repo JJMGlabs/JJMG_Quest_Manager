@@ -21,8 +21,7 @@ nav.navbar {
 }
 
 .sidebar {
-    background-color: var(--bs-primary);
-    filter: brightness(150%);
+    background-color: var(--bs-secondary);
     height: 100%;
     width: 250px; /* Adjust this here and in the layout for MainContentCssClass */
     position: fixed;

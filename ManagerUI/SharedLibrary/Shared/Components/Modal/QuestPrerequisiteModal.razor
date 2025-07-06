@@ -1,0 +1,42 @@
+﻿@using Microsoft.AspNetCore.Components.Forms
+@using QuestManagerSharedResources.Model
+@using QuestManagerSharedResources.Model.Enums
+@using QuestManagerSharedResources.QuestSubObjects
+@using SharedLibrary.Data.Callback
+@using SharedLibrary.Data.Enum
+@using SharedLibrary.Shared.Components.InputControls
+
+@inherits SubObjectMeasurableModal
+
+@{
+    base.BuildRenderTree(__builder);
+}
+
+
+@code {
+    private QuestPrerequisite questPrequisite;
+
+    protected override void OnInitialized()
+    {
+        questPrequisite = (QuestPrerequisite)DialogTarget;
+
+        ChildComponent = (__builder) =>
+        {
+            <div class="form-group">
+                <label class="form-label">Canceleled</label>
+                <input @bind="questPrequisite.isPrerequisiteCanceled" class="form-check" type="checkbox">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Has Been Met</label>
+                <input @bind="questPrequisite.isPrerequisiteMet" class="form-check" type="checkbox">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Reveals Quest</label>
+                <input @bind="questPrequisite.RevealsQuest" class="form-check" type="checkbox">
+            </div>
+            <DictionaryInput @bind-dictionary="@questPrequisite.Metadata" Label="Metadata" />
+        };
+        base.OnInitialized();
+    }
+    }

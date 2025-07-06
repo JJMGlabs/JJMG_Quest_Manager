@@ -1,0 +1,22 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <ui:Style>
+
+    </ui:Style>
+    <ui:VisualElement class="subObjectLstItmRow">
+        <ui:VisualElement class="leftColumn">
+            <ui:Label tabindex="-1" name="MeasureName" parse-escape-sequences="true" display-tooltip-when-elided="true" />
+        </ui:VisualElement>
+        <ui:VisualElement class="rightColumn">
+            <ui:Label tabindex="-1" name="MeasureState" parse-escape-sequences="true" display-tooltip-when-elided="true" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+    <ui:VisualElement class="subObjectLstItmRow">
+        <ui:VisualElement class="leftColumn">
+            <ui:Label tabindex="-1" name="MeasureValue" parse-escape-sequences="true" display-tooltip-when-elided="true" />
+        </ui:VisualElement>
+        <ui:VisualElement class="rightColumn rightInnerColumn">
+            <ui:Label tabindex="-1" name="MeasureProgress" parse-escape-sequences="true" display-tooltip-when-elided="true" />
+            <ui:Label tabindex="-1" name="MeasureTarget" parse-escape-sequences="true" display-tooltip-when-elided="true" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

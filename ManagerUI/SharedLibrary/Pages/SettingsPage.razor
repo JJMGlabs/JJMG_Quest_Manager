@@ -1,0 +1,67 @@
+﻿@page "/settings"
+@using Microsoft.Extensions.Configuration
+@using Microsoft.Extensions.Options
+@using QuestManager.Configuration
+@using System.Text.RegularExpressions
+@using SharedLibrary.Data.Configuration
+@using SharedLibrary.Shared.Components.Dialog
+@using SharedLibrary.Shared.Components.InputControls
+
+@*Write access options are not guaranteed to be up to date with in-memory changes done by quest manager*@
+@inject IOptions<QuestDbConnectionOptions> questDbOptions;
+@inject IWritableOptions<QuestDbConnectionOptions> questDbOptionsWriteAccess;
+@inject IOptions<QuestLineDbConnectionOptions> questlineDbOptions;
+@inject IWritableOptions<QuestLineDbConnectionOptions> questlineDbOptionsWriteAccess;
+
+@inject NavigationManager navManager;
+
+<PageTitle>Settings</PageTitle>
+
+<div class="container" style="padding-top:20px">
+    <h4>File Based Database Connection</h4>
+    <CascadingValue Value="questDbOptions">
+        <CascadingValue Value="questDbOptionsWriteAccess">
+            <DatabaseSettings @ref="questDatabaseSettings" TOptions="QuestDbConnectionOptions" />
+        </CascadingValue>
+    </CascadingValue>
+    <h4>Questline Database Connection</h4>
+    <CascadingValue Value="questlineDbOptions">
+        <CascadingValue Value="questlineDbOptionsWriteAccess">
+            <DatabaseSettings @ref="questlineDatabaseSettings" TOptions="QuestLineDbConnectionOptions" />
+        </CascadingValue>
+    </CascadingValue>
+
+    <div style="padding-top:20px">
+        <button type="button" class="btn btn-primary" @onclick=@SaveSettings>Save</button>
+    </div>
+</div>
+
+<Toast @ref="toast" />
+
+@code {
+    private DatabaseSettings<QuestDbConnectionOptions> questDatabaseSettings;
+    private DatabaseSettings<QuestLineDbConnectionOptions> questlineDatabaseSettings;
+
+    private Toast toast;
+
+    protected override void OnInitialized()
+    {
+        Console.WriteLine(questDbOptions.Value.DbName);
+        Console.WriteLine(questlineDbOptions.Value.DbName);
+        base.OnInitialized();
+    }
+
+    private async Task SaveSettings()
+    {
+        if (questDatabaseSettings.ValidationFailed || questlineDatabaseSettings.ValidationFailed)
+            toast.Show("Some settings could not be saved, check the error messages.", "alert-danger");
+
+        if (questDatabaseSettings != null && !questDatabaseSettings.ValidationFailed)
+            questDatabaseSettings.SaveSettings();
+
+        if (questlineDatabaseSettings != null && !questlineDatabaseSettings.ValidationFailed)
+            questlineDatabaseSettings.SaveSettings();
+
+        toast.Show("Settings saved successfully.", "alert-success");
+    }
+}

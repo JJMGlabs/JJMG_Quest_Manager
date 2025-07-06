@@ -1,6 +1,7 @@
 ﻿using SharedLibrary.Data;
 using Microsoft.AspNetCore.Components.WebView.Maui;
 using SharedLibrary;
+using Microsoft.Extensions.Configuration;
 
 namespace MauiManagerUi
 {
@@ -20,9 +21,17 @@ namespace MauiManagerUi
 
             #if DEBUG
                 builder.Services.AddBlazorWebViewDeveloperTools();
-            #endif
+#endif
 
-            builder.Services.AddSharedLibrary();
+            IConfiguration configuration = new ConfigurationBuilder()
+        .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true) // Add appsettings.json
+.AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production"}.json", optional: true) // Add environment-specific settings
+.AddEnvironmentVariables()
+    .Build();
+            builder.Services.AddSingleton(configuration);
+            var configManager = new ConfigurationManager();
+
+            builder.Services.AddSharedLibrary(configManager);
 
 
             return builder.Build();
