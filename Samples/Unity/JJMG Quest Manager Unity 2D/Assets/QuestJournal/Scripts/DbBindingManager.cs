@@ -9,6 +9,8 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
 
+using QuestJournal.UI;
+
 [RequireComponent(typeof(UIDocument))]
 public class DbBindingManager : MonoBehaviour
 {
@@ -25,6 +27,8 @@ public class DbBindingManager : MonoBehaviour
     private ListView _questList;
     private VisualElement _questInfoPanel;
 
+    private QuestJournalTabController _tabController;
+
     public List<Quest> Quests;
 
     private QuestProgressionManagerClient ProgressionManager;
@@ -34,12 +38,16 @@ public class DbBindingManager : MonoBehaviour
         ProgressionManager = new QuestProgressionManagerClient(Application.dataPath + "//saveFiles", Application.dataPath, Constants.QuestDb.QuestDbJsonFile);
         Quests = ProgressionManager.GetAllQuests();
 
-        _questList = GetComponent<UIDocument>().rootVisualElement.Q<ListView>("QuestList");
-        _questInfoPanel = GetComponent<UIDocument>().rootVisualElement.Q<VisualElement>("QuestInfoPanel");
+        var root = GetComponent<UIDocument>().rootVisualElement;
+        _tabController = new QuestJournalTabController(root);
+
+        _questList = root.Q<ListView>("QuestList");
+        _questInfoPanel = root.Q<VisualElement>("QuestInfoPanel");
 
         BindQuestList();
 
-        BindQuestInfoPanel(Quests.First());
+        if (Quests != null && Quests.Count > 0)
+            BindQuestInfoPanel(Quests.First());
 
         _questList.selectionChanged += BindQuestInfoPanelSelectionChangedEvent;
     }

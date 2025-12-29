@@ -3,7 +3,21 @@ color: rgb(255, 255, 255);
 }
 
 .journalContainer {
-flex-grow: 1; background-color: rgba(34, 34, 34, 0.98); flex-direction: row;
+flex-grow: 1; background-color: rgba(34, 34, 34, 0.98); flex-direction: column;
+}
+
+.tabContent {
+flex-grow: 1; flex-direction: row;
+}
+
+.tabBar
+{
+flex-direction: row;
+}
+
+.tabButton
+{
+
 }
 
 .questList {
@@ -34,7 +48,7 @@ flex-direction: row;
             flex-direction: row;
             justify-content: space-between;
             align-items: center;
-            padding-right:22;
+            padding-right:22px;
         }
         .subObjectLstItmColumn {
             flex-direction: column;
