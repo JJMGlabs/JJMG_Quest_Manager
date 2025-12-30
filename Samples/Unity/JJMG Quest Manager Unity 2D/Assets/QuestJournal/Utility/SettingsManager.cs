@@ -16,14 +16,16 @@ public static class SettingsManager
     [Serializable]
     public class SettingEntry
     {
+        public string SectionName;
         public string FolderPath;
         public string FileName;
         public string Delimiter;
 
         public SettingEntry() { }
 
-        public SettingEntry(string folderPath, string fileName, string delimiter)
+        public SettingEntry(string sectionName, string folderPath, string fileName, string delimiter)
         {
+            SectionName = sectionName;
             FolderPath = folderPath;
             FileName = fileName;
             Delimiter = delimiter;
@@ -111,8 +113,7 @@ public static class SettingsManager
     {
         if (entry == null) return false;
         var list = Load();
-        var existing = list.Find(e => string.Equals(e.FolderPath, entry.FolderPath, StringComparison.OrdinalIgnoreCase)
-                                     && string.Equals(e.FileName, entry.FileName, StringComparison.OrdinalIgnoreCase));
+        var existing = list.Find(e => string.Equals(e.SectionName, entry.SectionName, StringComparison.OrdinalIgnoreCase));
         if (existing != null)
         {
             existing.Delimiter = entry.Delimiter;

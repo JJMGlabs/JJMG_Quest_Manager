@@ -2,6 +2,7 @@ using Assets.QuestJournalApplication.QuestJournal;
 using QuestManagerSharedResources.Model;
 using QuestManagerSharedResources.QuestSubObjects;
 using QuestProgressionManager.Managers;
+using System.IO;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -35,7 +36,24 @@ public class DbBindingManager : MonoBehaviour
 
     private void OnEnable()
     {
-        ProgressionManager = new QuestProgressionManagerClient(Application.dataPath + "//saveFiles", Application.dataPath, Constants.QuestDb.QuestDbJsonFile);
+          var settingsEntries = SettingsManager.Load();
+        SettingsManager.SettingEntry configuredEntry = null;
+        if (settingsEntries != null && settingsEntries.Count > 0)
+        {
+            configuredEntry = settingsEntries.Find(e => string.Equals(e.SectionName, Constants.SettingsSections.QuestDb, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (configuredEntry != null)
+        {
+            var dbConnPath = configuredEntry.FolderPath;
+            var dbCollectionName = Path.GetFileNameWithoutExtension(configuredEntry.FileName);
+            ProgressionManager = new QuestProgressionManagerClient(Application.dataPath + "//saveFiles", dbConnPath, dbCollectionName, configuredEntry.Delimiter);
+        }
+        else
+        {
+            ProgressionManager = new QuestProgressionManagerClient(Application.dataPath + "//saveFiles", Application.dataPath, Constants.QuestDb.QuestDbJsonFile);
+        }
+
         Quests = ProgressionManager.GetAllQuests();
 
         var root = GetComponent<UIDocument>().rootVisualElement;

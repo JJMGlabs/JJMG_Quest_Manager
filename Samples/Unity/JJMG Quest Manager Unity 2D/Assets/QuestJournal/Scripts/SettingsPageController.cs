@@ -1,3 +1,4 @@
+using Assets.QuestJournalApplication.QuestJournal;
 using System;
 using System.IO;
 using UnityEngine;
@@ -140,13 +141,13 @@ namespace QuestJournal.UI
             return errors;
         }
 
-        private void UpdateSettingsManagerForSection(DbOptions opts)
+        private void UpdateSettingsManagerForSection(string section, DbOptions opts)
         {
             if (opts == null) return;
             if (!string.IsNullOrEmpty(opts.BasePath) && !string.IsNullOrEmpty(opts.CollectionName))
             {
                 var file = opts.CollectionName.TrimStart('\\');
-                SettingsManager.AddOrUpdate(new SettingsManager.SettingEntry(opts.BasePath + opts.DbName, file, opts.RootObject));
+                SettingsManager.AddOrUpdate(new SettingsManager.SettingEntry(section, opts.BasePath + opts.DbName, file, opts.RootObject));
             }
         }
 
@@ -173,12 +174,12 @@ namespace QuestJournal.UI
             var errors = new System.Collections.Generic.List<string>();
             if (questChanged)
             {
-                errors.AddRange(ValidateAndApplySection("QuestDb", qFolder, qFile, qDelim, settings.QuestDb));
+                errors.AddRange(ValidateAndApplySection(Constants.SettingsSections.QuestDb, qFolder, qFile, qDelim, settings.QuestDb));
             }
 
             if (qlChanged)
             {
-                errors.AddRange(ValidateAndApplySection("QuestlineDb", qlFolder, qlFile, qlDelim, settings.QuestlineDb));
+                errors.AddRange(ValidateAndApplySection(Constants.SettingsSections.QuestlineDb, qlFolder, qlFile, qlDelim, settings.QuestlineDb));
             }
 
             if (errors.Count > 0)
@@ -188,12 +189,12 @@ namespace QuestJournal.UI
             }
 
             PersistSettings();
-            ShowSavedToast();
 
             try
             {
-                if (questChanged) UpdateSettingsManagerForSection(settings.QuestDb);
-                if (qlChanged) UpdateSettingsManagerForSection(settings.QuestlineDb);
+                if (questChanged) UpdateSettingsManagerForSection(Constants.SettingsSections.QuestDb, settings.QuestDb);
+                if (qlChanged) UpdateSettingsManagerForSection(Constants.SettingsSections.QuestlineDb, settings.QuestlineDb);
+                ShowSavedToast();
             }
             catch (Exception ex)
             {
