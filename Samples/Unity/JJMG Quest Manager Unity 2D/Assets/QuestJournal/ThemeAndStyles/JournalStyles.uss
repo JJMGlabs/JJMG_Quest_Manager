@@ -66,3 +66,22 @@ flex-direction: row;
             flex-direction: row;
             align-items: flex-start;
         }
+
+.questlineToggleButton {
+    display: none;
+    align-self: flex-end;
+    margin-bottom: 4px;
+}
+
+.questListItemContainer {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    background-color: rgba(56, 56, 56, 0);
+    padding-left: 4px;
+}
+
+.chevronLabel {
+    width: 16px;
+    unity-text-align: MiddleLeft;
+}

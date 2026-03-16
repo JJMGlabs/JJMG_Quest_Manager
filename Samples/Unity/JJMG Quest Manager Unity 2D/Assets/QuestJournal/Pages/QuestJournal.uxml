@@ -7,6 +7,7 @@
             <ui:Button name="SettingsTabButton" text="Settings" class="tabButton" />
         </ui:VisualElement>
         <ui:VisualElement name="QuestsTabContent" class="tabContent">
+            <ui:Button name="QuestlineToggleButton" text="Questlines" class="questlineToggleButton" />
             <ui:ListView name="QuestList" focusable="true" virtualization-method="DynamicHeight" show-border="true" show-foldout-header="true" header-title="Quests" show-bound-collection-size="false" class="questList" />
             <ui:Instance template="QuestInfoPanel" name="QuestInfoPanel" class="questInfoPanel" />
         </ui:VisualElement>
