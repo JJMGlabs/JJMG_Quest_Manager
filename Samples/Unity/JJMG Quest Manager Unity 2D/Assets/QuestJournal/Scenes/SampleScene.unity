@@ -348,6 +348,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!33 &745569666
 MeshFilter:
@@ -410,14 +411,14 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 914768890}
   m_Enabled: 1
-  serializedVersion: 11
+  serializedVersion: 12
   m_Type: 1
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Intensity: 1
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
-  m_CookieSize: 10
+  m_CookieSize2D: {x: 10, y: 10}
   m_Shadows:
     m_Type: 0
     m_Resolution: -1
@@ -505,7 +506,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 951593879}
-  - component: {fileID: 951593881}
   - component: {fileID: 951593880}
   m_Layer: 0
   m_Name: EventSystem
@@ -544,29 +544,6 @@ MonoBehaviour:
   FolderPath: 
   FileName: 
   Delimiter: 
---- !u!114 &951593881
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 951593876}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e20ccb2d3f50db54c84430ff6383e7ef, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  settings:
-    QuestDb:
-      BasePath: 
-      DbName: 
-      CollectionName: 
-      RootObject: 
-    QuestlineDb:
-      BasePath: 
-      DbName: 
-      CollectionName: 
-      RootObject: 
 --- !u!1 &1026894707
 GameObject:
   m_ObjectHideFlags: 0
@@ -802,6 +779,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!33 &1755053978
 MeshFilter:
@@ -913,6 +891,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!33 &2037233654
 MeshFilter:

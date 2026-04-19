@@ -30,16 +30,24 @@ namespace QuestJournal.UI
         {
             _questsTabContent.style.display = DisplayStyle.Flex;
             _settingsTabContent.style.display = DisplayStyle.None;
-            _questsTabButton.SetEnabled(false);
-            _settingsTabButton.SetEnabled(true);
+            
+            _questsTabButton.RemoveFromClassList("tabButton--inactive");
+            _questsTabButton.AddToClassList("tabButton--active");
+            
+            _settingsTabButton.RemoveFromClassList("tabButton--active");
+            _settingsTabButton.AddToClassList("tabButton--inactive");
         }
 
         private void ShowSettingsTab()
         {
             _questsTabContent.style.display = DisplayStyle.None;
             _settingsTabContent.style.display = DisplayStyle.Flex;
-            _questsTabButton.SetEnabled(true);
-            _settingsTabButton.SetEnabled(false);
+            
+            _questsTabButton.RemoveFromClassList("tabButton--active");
+            _questsTabButton.AddToClassList("tabButton--inactive");
+            
+            _settingsTabButton.RemoveFromClassList("tabButton--inactive");
+            _settingsTabButton.AddToClassList("tabButton--active");
 
             // Lazily load settings controller when tab is opened
             if (_settingsPageController == null)
