@@ -29,6 +29,9 @@ namespace QuestJournal.UI
                 var expanded = GetExpandedState(ql.Id, paths);
                 _questlineExpanded[ql.Id] = expanded;
 
+                // Track all quests that belong to questlines, even when the questline is collapsed.
+                AddQuestIdsFromPaths(questsInQuestlines, paths);
+
                 list.Add(QuestListItemWrapper.Header(ql.Id, ql.Name));
 
                 if (expanded)
@@ -68,12 +71,32 @@ namespace QuestJournal.UI
             }
         }
 
+        private void AddQuestIdsFromPaths(HashSet<string> questsInQuestlines, List<List<Quest>> paths)
+        {
+            foreach (var path in paths)
+            {
+                foreach (var q in path)
+                {
+                    if (q != null)
+                        questsInQuestlines.Add(q.Id);
+                }
+            }
+        }
+
         private void AddUngroupedQuests(List<QuestListItemWrapper> list, List<Quest> allQuests, HashSet<string> questsInQuestlines)
         {
             var otherQuests = allQuests.Where(q => !questsInQuestlines.Contains(q.Id)).ToList();
-            if (otherQuests.Any())
+            if (!otherQuests.Any())
+                return;
+
+            var id = "other";
+            var expanded = GetExpandedState(id, otherQuests.Select(q => new List<Quest> { q }).ToList());
+            _questlineExpanded[id] = expanded;
+
+            list.Add(QuestListItemWrapper.Header(id, "quests (without questline)"));
+
+            if (expanded)
             {
-                list.Add(QuestListItemWrapper.Header("other", "Other Quests"));
                 foreach (var q in otherQuests)
                     list.Add(QuestListItemWrapper.ForQuest(q));
             }

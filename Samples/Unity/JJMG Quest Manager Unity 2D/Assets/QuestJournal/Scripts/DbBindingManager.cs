@@ -178,10 +178,10 @@ public class DbBindingManager : MonoBehaviour
                 var item = src[i] as QuestListItemWrapper;
                 if (item == null)
                     return;
-                var headerElement = e.Q<VisualElement>("QuestName");
-                headerElement.userData = item.HeaderId;
-                headerElement.UnregisterCallback<PointerDownEvent>(OnHeaderPointerDown);
-                headerElement.RegisterCallback<PointerDownEvent>(OnHeaderPointerDown);
+                var itemRoot = e;
+                itemRoot.userData = item.HeaderId;
+                itemRoot.UnregisterCallback<PointerDownEvent>(OnHeaderPointerDown);
+                itemRoot.RegisterCallback<PointerDownEvent>(OnHeaderPointerDown);
                 var chevronLabel = e.Q<Label>("Chevron");
                 var nameLabel = e.Q<Label>("QuestName");
                 if (item.IsHeader)
