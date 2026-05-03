@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2023 John James McGowan
+Copyright (c) 2026 John James McGowan
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
