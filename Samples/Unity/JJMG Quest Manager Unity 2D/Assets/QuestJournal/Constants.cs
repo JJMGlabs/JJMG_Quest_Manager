@@ -14,6 +14,13 @@ namespace Assets.QuestJournalApplication.QuestJournal
             public const float RebuildTimerSeconds = 2;
             public const bool RebuildUpdate = true;
         }
+
+        public static class  SettingsSections
+        {
+            // Note : these must match the SectionName values in SettingsController and if changed could break existing user settings
+            public const string QuestDb = "QuestDb";
+            public const string QuestlineDb = "QuestlineDb";
+        }
     }
 
 }

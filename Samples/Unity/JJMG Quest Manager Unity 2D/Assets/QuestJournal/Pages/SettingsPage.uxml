@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns="UnityEngine.UIElements">
+    <ui:VisualElement name="SettingsPage" style="flex-direction: column; align-items: center; padding: 24px;">
+        <ui:Label text="Settings" style="unity-font-style: bold; font-size: 24px; margin-bottom: 16px;" />
+        <!-- Put settings sections in a scroll area so header and save remain visible -->
+        <ui:ScrollView name="SettingsScroll" style="width: 520px; height: 420px; margin-bottom: 12px;">
+            <ui:VisualElement style="flex-direction: column;">
+                <!-- File Based Database Connection -->
+                <ui:Label text="File Based Database Connection" style="unity-font-style: bold; font-size: 18px; margin-bottom: 8px;" />
+                <ui:VisualElement name="QuestDbSettings" class="database-settings-root" style="margin-bottom: 16px;">
+                    <ui:VisualElement class="settingContainer">
+                        <ui:VisualElement class="settingDetailContainer">
+                            <ui:Label class="settingDetailHeader" text="Folder" />
+                            <ui:Label class="settingDetailDescription" text="Folder path where your database is located" />
+                        </ui:VisualElement>
+                        <ui:VisualElement class="settingControlContainer">
+                            <ui:Label class="errorLabel" name="QuestDb_FolderPathError" style="display: none;" text="Invalid folder path, folder does not exist!" />
+                            <ui:TextField class="form-control input-textbox" name="QuestDb_FolderPathField" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+
+                    <ui:VisualElement class="settingContainer">
+                        <ui:VisualElement class="settingDetailContainer">
+                            <ui:Label class="settingDetailHeader" text="File Name" />
+                            <ui:Label class="settingDetailDescription" text="The name your json database file will have" />
+                        </ui:VisualElement>
+                        <ui:VisualElement class="settingControlContainer">
+                            <ui:Label class="errorLabel" name="QuestDb_FileNameError" style="display: none;" text="Invalid file name!" />
+                            <ui:TextField class="form-control input-textbox" name="QuestDb_FileNameField" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+
+                    <ui:VisualElement class="settingContainer">
+                        <ui:VisualElement class="settingDetailContainer">
+                            <ui:Label class="settingDetailHeader" text="File Path To Database:" />
+                        </ui:VisualElement>
+                        <ui:VisualElement class="settingControlContainer">
+                            <ui:Label name="QuestDb_FullPathLabel" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+
+                    <ui:VisualElement class="settingContainer">
+                        <ui:VisualElement class="settingDetailContainer">
+                            <ui:Label class="settingDetailHeader" text="Delimiter" />
+                            <ui:Label class="settingDetailDescription" text="If filled the value here will surround your data rather than replace all text in the file" />
+                        </ui:VisualElement>
+                        <ui:VisualElement class="settingControlContainer">
+                            <ui:Label class="errorLabel" name="QuestDb_DelimiterError" style="display: none;" text="Invalid folder path, folder does not exist!" />
+                            <ui:TextField class="form-control input-textbox" name="QuestDb_DelimiterField" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+
+                <!-- Questline Database Connection -->
+                <ui:Label text="Questline Database Connection" style="unity-font-style: bold; font-size: 18px; margin-bottom: 8px;" />
+                <ui:VisualElement name="QuestlineDbSettings" class="database-settings-root" style="margin-bottom: 16px;">
+                    <ui:VisualElement class="settingContainer">
+                        <ui:VisualElement class="settingDetailContainer">
+                            <ui:Label class="settingDetailHeader" text="Folder" />
+                            <ui:Label class="settingDetailDescription" text="Folder path where your database is located" />
+                        </ui:VisualElement>
+                        <ui:VisualElement class="settingControlContainer">
+                            <ui:Label class="errorLabel" name="QuestlineDb_FolderPathError" style="display: none;" text="Invalid folder path, folder does not exist!" />
+                            <ui:TextField class="form-control input-textbox" name="QuestlineDb_FolderPathField" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+
+                    <ui:VisualElement class="settingContainer">
+                        <ui:VisualElement class="settingDetailContainer">
+                            <ui:Label class="settingDetailHeader" text="File Name" />
+                            <ui:Label class="settingDetailDescription" text="The name your json database file will have" />
+                        </ui:VisualElement>
+                        <ui:VisualElement class="settingControlContainer">
+                            <ui:Label class="errorLabel" name="QuestlineDb_FileNameError" style="display: none;" text="Invalid file name!" />
+                            <ui:TextField class="form-control input-textbox" name="QuestlineDb_FileNameField" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+
+                    <ui:VisualElement class="settingContainer">
+                        <ui:VisualElement class="settingDetailContainer">
+                            <ui:Label class="settingDetailHeader" text="File Path To Database:" />
+                        </ui:VisualElement>
+                        <ui:VisualElement class="settingControlContainer">
+                            <ui:Label name="QuestlineDb_FullPathLabel" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+
+                    <ui:VisualElement class="settingContainer">
+                        <ui:VisualElement class="settingDetailContainer">
+                            <ui:Label class="settingDetailHeader" text="Delimiter" />
+                            <ui:Label class="settingDetailDescription" text="If filled the value here will surround your data rather than replace all text in the file" />
+                        </ui:VisualElement>
+                        <ui:VisualElement class="settingControlContainer">
+                            <ui:Label class="errorLabel" name="QuestlineDb_DelimiterError" style="display: none;" text="Invalid folder path, folder does not exist!" />
+                            <ui:TextField class="form-control input-textbox" name="QuestlineDb_DelimiterField" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:ScrollView>
+
+        <!-- Save controls remain static below the scroll -->
+        <ui:VisualElement style="width: 520px; display: flex; justify-content: flex-end;">
+            <ui:Button name="SaveAllSettingsButton" text="Save" style="margin-right: 12px;" />
+            <ui:Label name="SettingsToastLabel" text="" style="color: #4CAF50; min-height: 20px; align-self: center;" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

@@ -1,9 +1,8 @@
-﻿using QuestManagerSharedResources.Model;
-using QuestManagerSharedResources.Model.Enums;
+﻿using QuestManagerClientApi.Controllers;
+using QuestManagerSharedResources.Model;
 using QuestProgressionManager.Managers.Interfaces;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 
 namespace QuestProgressionManager.Managers
 {
@@ -14,17 +13,49 @@ namespace QuestProgressionManager.Managers
     public class QuestlineManager : IQuestlineManager
     {
         private readonly QuestProgressionManagerClient _progressionClient;
+        private readonly string _questlineDbConnectionPath;
+        private readonly string _questlineDbCollectionName;
+        private readonly string _questlineDelimiter;
+
         public QuestlineManager(QuestProgressionManagerClient progressionClient)
         {
             _progressionClient = progressionClient;
         }
+
+        public QuestlineManager(QuestProgressionManagerClient progressionClient, string questlineDbConnectionPath, string questlineDbCollectionName, string questlineDelimiter = "")
+        {
+            _progressionClient = progressionClient;
+            _questlineDbConnectionPath = questlineDbConnectionPath;
+            _questlineDbCollectionName = questlineDbCollectionName;
+            _questlineDelimiter = questlineDelimiter;
+        }
+
+        public List<QuestlineMetadata> GetAllQuestlines()
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(_questlineDbConnectionPath) || string.IsNullOrEmpty(_questlineDbCollectionName))
+                    return new List<QuestlineMetadata>();
+
+                var qls = LocalFileDbController.GetCollectionFromDatabase<QuestlineMetadata>(_questlineDbConnectionPath, _questlineDbCollectionName, _questlineDelimiter);
+                return qls ?? new List<QuestlineMetadata>();
+            }
+            catch
+            {
+                return new List<QuestlineMetadata>();
+            }
+        }
+
         public List<Quest> GetNextQuestInQuestline(Quest quest, string questlineId)
         {
             var result = new List<Quest>();
             if (quest == null || string.IsNullOrEmpty(questlineId))
                 return result;
 
-            var outcomes = quest.QuestOutcomes.Where(o => o.isQuestlineOutcome() && o.GetQuestlineId() == questlineId);
+            if (quest.QuestOutcomes == null || quest.QuestOutcomes.Count == 0)
+                return result;
+
+            var outcomes = quest.QuestOutcomes.Where(o => o != null && o.isQuestlineOutcome() && o.GetQuestlineId() == questlineId);
 
             foreach (var item in outcomes)
             {                
@@ -46,7 +77,10 @@ namespace QuestProgressionManager.Managers
         {
             var allQuests = hasBeenCompleted ? _progressionClient.GetAllCompleteQuests() : _progressionClient.GetAllQuests();
 
-            return allQuests.FindAll(q => q.QuestOutcomes.Any(o => o.isQuestlineOutcome() && o.GetQuestIdFromOutcome() == quest.Id && o.GetQuestlineId() == questlineId));
+            if (allQuests == null || allQuests.Count == 0 || quest == null)
+                return new List<Quest>();
+
+            return allQuests.FindAll(q => q.QuestOutcomes != null && q.QuestOutcomes.Any(o => o != null && o.isQuestlineOutcome() && o.GetQuestIdFromOutcome() == quest.Id && o.GetQuestlineId() == questlineId));
         }
 
         public List<Quest> GetPreviousQuestInQuestline(string questId, string questlineId, bool hasBeenCompleted = false)
@@ -104,8 +138,12 @@ namespace QuestProgressionManager.Managers
 
         public List<List<Quest>> GetQuestline(string questlineId)
         {
-            var allQuests = _progressionClient.GetAllQuests()
-                .Where(q => q.QuestOutcomes.Any(o => o.isQuestlineOutcome() && o.GetQuestlineId() == questlineId))
+            var allQuestsRaw = _progressionClient.GetAllQuests();
+            if (allQuestsRaw == null || allQuestsRaw.Count == 0)
+                return new List<List<Quest>>();
+
+            var allQuests = allQuestsRaw
+                .Where(q => q.QuestOutcomes != null && q.QuestOutcomes.Any(o => o != null && o.isQuestlineOutcome() && o.GetQuestlineId() == questlineId))
                 .ToList();
 
             var mappedQuests = allQuests.ToDictionary(q => q.Id);
@@ -114,8 +152,7 @@ namespace QuestProgressionManager.Managers
 
             // Start at root quests
             var rootQuests = allQuests
-                .Where(q => !allQuests.Any(otherQuest => otherQuest.QuestOutcomes
-                    .Any(o => o.GetQuestIdFromOutcome() == q.Id)))  // Root quests are not outcomes of other quests
+                .Where(q => !allQuests.Any(otherQuest => otherQuest.QuestOutcomes != null && otherQuest.QuestOutcomes.Any(o => o != null && o.GetQuestIdFromOutcome() == q.Id)))  // Root quests are not outcomes of other quests
                 .ToList();
 
             foreach (var rootQuest in rootQuests)
@@ -126,20 +163,24 @@ namespace QuestProgressionManager.Managers
 
         private static void BuildQuestlinePath(Quest currentQuest, List<Quest> currentPath, Dictionary<string, Quest> mappedQuests, List<List<Quest>> orderedQuestlinePaths)
         {
-            HashSet<string> visitedQuests = new HashSet<string>();
-
+            // prevent infinite loops by tracking visited quests in the current path
+            var visitedQuests = new HashSet<string>(currentPath.Select(q => q?.Id));
             if (visitedQuests.Contains(currentQuest.Id))
                 return;
 
             currentPath.Add(currentQuest);
-            visitedQuests.Add(currentQuest.Id);
 
-            var nextQuestIds = currentQuest.QuestOutcomes
-                .Select(o => o.GetQuestIdFromOutcome())
-                .Where(nextQuestId => !string.IsNullOrEmpty(nextQuestId))
-                .ToList();
+            var nextQuestIds = new List<string>();
+            if (currentQuest.QuestOutcomes != null)
+            {
+                nextQuestIds = currentQuest.QuestOutcomes
+                    .Where(o => o != null)
+                    .Select(o => o.GetQuestIdFromOutcome())
+                    .Where(nextQuestId => !string.IsNullOrEmpty(nextQuestId))
+                    .ToList();
+            }
 
-            if (!nextQuestIds.Any())
+            if (nextQuestIds == null || !nextQuestIds.Any())
             {
                 orderedQuestlinePaths.Add(new List<Quest>(currentPath));
             }

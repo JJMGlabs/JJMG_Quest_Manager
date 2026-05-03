@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns="UnityEngine.UIElements">
+    <ui:VisualElement class="database-settings-root">
+        <ui:VisualElement class="settingContainer">
+            <ui:VisualElement class="settingDetailContainer">
+                <ui:Label class="settingDetailHeader" text="Folder" />
+                <ui:Label class="settingDetailDescription" text="Folder path where your database is located" />
+            </ui:VisualElement>
+            <ui:VisualElement class="settingControlContainer">
+                <ui:Label class="errorLabel" name="FolderPathError" style="display: none;" text="Invalid folder path, folder does not exist!" />
+                <ui:TextField class="form-control input-textbox" name="FolderPathField" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:VisualElement class="settingContainer">
+            <ui:VisualElement class="settingDetailContainer">
+                <ui:Label class="settingDetailHeader" text="File Name" />
+                <ui:Label class="settingDetailDescription" text="The name your json database file will have" />
+            </ui:VisualElement>
+            <ui:VisualElement class="settingControlContainer">
+                <ui:Label class="errorLabel" name="FileNameError" style="display: none;" text="Invalid file name!" />
+                <ui:TextField class="form-control input-textbox" name="FileNameField" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:VisualElement class="settingContainer">
+            <ui:VisualElement class="settingDetailContainer">
+                <ui:Label class="settingDetailHeader" text="File Path To Database:" />
+            </ui:VisualElement>
+            <ui:VisualElement class="settingControlContainer">
+                <ui:Label name="FullPathLabel" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:VisualElement class="settingContainer">
+            <ui:VisualElement class="settingDetailContainer">
+                <ui:Label class="settingDetailHeader" text="Delimiter" />
+                <ui:Label class="settingDetailDescription" text="If filled the value here will surround your data rather than replace all text in the file" />
+            </ui:VisualElement>
+            <ui:VisualElement class="settingControlContainer">
+                <ui:Label class="errorLabel" name="DelimiterError" style="display: none;" text="Invalid folder path, folder does not exist!" />
+                <ui:TextField class="form-control input-textbox" name="DelimiterField" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:VisualElement style="padding-top:20px">
+            <ui:Label class="errorLabel" name="InputError" style="display: none;" text="Cannot save settings with invalid input" />
+            <ui:Label class="errorLabel" name="SaveError" style="display: none;" text="Cannot save settings without a folder and file specified" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
