@@ -143,8 +143,16 @@
 
     protected override void OnInitialized()
     {
+        RefreshQuestLineTree();
+    }
+
+    private void RefreshQuestLineTree()
+    {
         if (string.IsNullOrEmpty(QuestLineId))
+        {
+            QuestLineTree = new List<List<Quest>>();
             return;
+        }
 
         QuestLineTree = QuestLineManager.GetQuestline(QuestLineId);
     }
@@ -185,6 +193,7 @@
         {
             AddQuestOutcomeToQuest(selectedQuest, "", QuestLineId);
             QuestDbConnection.SaveQuestDbChanges();
+            RefreshQuestLineTree();
             ResetSelection();
             return;
         }
@@ -208,6 +217,7 @@
             QuestDbConnection.SaveQuestDbChanges();
             AddQuestOutcomeToQuest(selectedQuest, string.Empty, QuestLineId);
             QuestDbConnection.SaveQuestDbChanges();
+            RefreshQuestLineTree();
             ResetSelection();
             return;
         }
@@ -217,6 +227,7 @@
         {
             UpdateNode(questline, prevQuest, nextQuest, currentQuest, selectedQuest);
             QuestDbConnection.SaveQuestDbChanges();
+            RefreshQuestLineTree();
             ResetSelection();
             return;
         }
@@ -230,6 +241,7 @@
             // 2. set selected to target next
             AddQuestOutcomeToQuest(selectedQuest, nextQuest.Id, QuestLineId);
             QuestDbConnection.SaveQuestDbChanges();
+            RefreshQuestLineTree();
             ResetSelection();
             return;
         }
@@ -357,7 +369,7 @@
         QuestDbConnection.UpdateQuest(quest);
     }
 
-    private async void CloseQuestSelectDialog(DialogCallback<string> callback)
+private async Task CloseQuestSelectDialog(DialogCallback<string> callback)
     {
         QuestSelectDialogOpen = false;
 
@@ -365,6 +377,7 @@
             return;
 
         await UpdateQuestId(callback.CallbackObject);
+        StateHasChanged();
     }
 
     private void OpenQuestSelectDialog(string questId)
