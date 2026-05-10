@@ -23,15 +23,11 @@ namespace MauiManagerUi
                 builder.Services.AddBlazorWebViewDeveloperTools();
 #endif
 
-            IConfiguration configuration = new ConfigurationBuilder()
-        .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true) // Add appsettings.json
-.AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production"}.json", optional: true) // Add environment-specific settings
-.AddEnvironmentVariables()
-    .Build();
-            builder.Services.AddSingleton(configuration);
-            var configManager = new ConfigurationManager();
+            builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true); // Add appsettings.json
+            builder.Configuration.AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production"}.json", optional: true, reloadOnChange: true); // Add environment-specific settings
+            builder.Configuration.AddEnvironmentVariables();
 
-            builder.Services.AddSharedLibrary(configManager);
+            builder.Services.AddSharedLibrary(builder.Configuration);
 
 
             return builder.Build();

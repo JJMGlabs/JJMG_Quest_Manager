@@ -9,7 +9,7 @@ namespace SharedLibrary
 {
     public static class StartupInjection
     {
-        public static void AddSharedLibrary(this IServiceCollection services, ConfigurationManager configuration)
+        public static void AddSharedLibrary(this IServiceCollection services, IConfiguration configuration)
         {
             services.ConfigureWritable<QuestDbConnectionOptions>(configuration.GetSection(Constants.QuestDbConfigurationSection), Constants.QuestDbConfigurationSection);
             services.ConfigureWritable<QuestLineDbConnectionOptions>(configuration.GetSection(Constants.QuestLineDbConfigurationSection), Constants.QuestLineDbConfigurationSection);

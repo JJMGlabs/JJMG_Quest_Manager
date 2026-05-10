@@ -18,14 +18,13 @@ namespace WpfManagerUi
             InitializeComponent();
             var serviceCollection = new ServiceCollection();
 
-            IConfiguration configuration = new ConfigurationBuilder()
+            IConfiguration configManager = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true) // Add appsettings.json
-                .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production"}.json", optional: true) // Add environment-specific settings
+                .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production"}.json", optional: true, reloadOnChange: true) // Add environment-specific settings
                 .AddEnvironmentVariables()
                 .Build();
 
-            serviceCollection.AddSingleton(configuration);
-            var configManager = new ConfigurationManager();
+            serviceCollection.AddSingleton<IConfiguration>(configManager);
 
             serviceCollection.AddWpfBlazorWebView();
             serviceCollection.AddSingleton(configManager);

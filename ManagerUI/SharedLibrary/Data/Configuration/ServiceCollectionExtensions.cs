@@ -33,8 +33,12 @@ namespace SharedLibrary.Data.Configuration
 
         private static string GetAppSettingsFileName(IHostEnvironment environment)
         {
-                string environmentName = (environment != null) ? environment.EnvironmentName.ToLower() :
-                        Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+            string environmentName = environment?.EnvironmentName;
+            if (string.IsNullOrWhiteSpace(environmentName))
+                environmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+
+            if (string.IsNullOrWhiteSpace(environmentName))
+                return "appsettings.json";
 
             return $"appsettings.{environmentName}.json";
         }

@@ -1,6 +1,7 @@
 ﻿
 using Microsoft.Extensions.Options;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using QuestManager.Configuration;
 using QuestManagerSharedResources.Model;
 using QuestManagerSharedResources.QuestSubObjects;
 using QuestManagerTests.Builders;
@@ -21,7 +22,7 @@ namespace QuestManager.Managers.Tests
                 .SetCollectionName(@"\questDb.json")
                 .Build();
 
-            var connection = new QuestDbConnection(Options.Create(dbOptions));
+            var connection = new QuestDbConnection(new TestOptionsMonitor<QuestDbConnectionOptions>(dbOptions));
             return connection;
         }
 
@@ -221,6 +222,28 @@ namespace QuestManager.Managers.Tests
             var deleteResults = sut.DeleteQuests(result.Select(q => q.Id).ToArray());
 
             Assert.IsTrue(deleteResults.All(x => x.IsSuccess));
+        }
+    }
+
+    internal class TestOptionsMonitor<TOptions> : IOptionsMonitor<TOptions> where TOptions : class, new()
+    {
+        private readonly TOptions _currentValue;
+
+        public TestOptionsMonitor(TOptions currentValue)
+        {
+            _currentValue = currentValue;
+        }
+
+        public TOptions CurrentValue => _currentValue;
+
+        public TOptions Get(string name) => _currentValue;
+
+        public IDisposable OnChange(Action<TOptions, string> listener) => NullDisposable.Instance;
+
+        private sealed class NullDisposable : IDisposable
+        {
+            public static readonly NullDisposable Instance = new NullDisposable();
+            public void Dispose() { }
         }
     }
 }
