@@ -18,21 +18,40 @@ namespace QuestManager.Managers
     /// </summary>
     public class QuestDbConnection : IQuestDbConnection
     {
-        private readonly string fullPath;
         private List<Quest> _allQuests;
-        DbConnectionOptions _options;
-        FileBasedDbConnectionUtility _db;
+        private readonly IOptionsMonitor<QuestDbConnectionOptions> _optionsMonitor;
+        private FileBasedDbConnectionUtility _db;
 
-        public QuestDbConnection(IOptions<QuestDbConnectionOptions> dbConnectionOptions)
+        private QuestDbConnectionOptions CurrentOptions => _optionsMonitor.CurrentValue;
+
+        private string CurrentFullPath
         {
-            _options = dbConnectionOptions.Value;
+            get
+            {
+                var options = CurrentOptions;
+                if (string.IsNullOrEmpty(options.BasePath))
+                    options.BasePath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.Create);
 
-            //if we dont have a json file location we use app settings
-            if (string.IsNullOrEmpty(_options.BasePath))
-                _options.BasePath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.Create);
+                return options.BasePath + options.DbName + options.CollectionName;
+            }
+        }
 
-            fullPath = _options.BasePath + _options.DbName + _options.CollectionName;
+        public QuestDbConnection(IOptionsMonitor<QuestDbConnectionOptions> dbConnectionOptions)
+        {
+            _optionsMonitor = dbConnectionOptions;
+            _optionsMonitor.OnChange(_ => ClearCachedQuests());
+
             _db = new FileBasedDbConnectionUtility(Constants.UtilityValues.WaitHandleForQuestDb);
+        }
+
+        private QuestDbConnection(IOptions<QuestDbConnectionOptions> dbConnectionOptions)
+            : this(new StaticOptionsMonitor<QuestDbConnectionOptions>(dbConnectionOptions.Value))
+        {
+        }
+
+        private void ClearCachedQuests()
+        {
+            _allQuests = null;
         }
 
         public ResponseStatus SaveQuestDbChanges()
@@ -44,14 +63,14 @@ namespace QuestManager.Managers
 
             SaveDbBackup();
 
-            _db.WriteListDataToFile(fullPath, GetAllQuests(),_options.RootObject);
+            _db.WriteListDataToFile(CurrentFullPath, GetAllQuests(), CurrentOptions.RootObject);
 
             return new ResponseStatus(true, "Successfully wrote quest data to data store");
         }
 
         public ResponseStatus SaveDbBackup()
         {
-            _db.BackupDB(fullPath,_options.RootObject);
+            _db.BackupDB(CurrentFullPath, CurrentOptions.RootObject);
 
             return new ResponseStatus(true, "Successfully backed up quest data");
         }
@@ -61,7 +80,7 @@ namespace QuestManager.Managers
             if (_allQuests == null)
             {
                 List<Quest> quests = new List<Quest>();
-                quests = _db.GetListOfDataFromFile<Quest>(fullPath, _options.RootObject);
+                quests = _db.GetListOfDataFromFile<Quest>(CurrentFullPath, CurrentOptions.RootObject);
                 _allQuests = quests != null ? quests : new List<Quest>();
             }
 
@@ -174,6 +193,28 @@ namespace QuestManager.Managers
             }
 
             return responses;
+        }
+
+        private sealed class StaticOptionsMonitor<TOptions> : IOptionsMonitor<TOptions> where TOptions : class, new()
+        {
+            private readonly TOptions _value;
+
+            public StaticOptionsMonitor(TOptions value)
+            {
+                _value = value;
+            }
+
+            public TOptions CurrentValue => _value;
+
+            public TOptions Get(string name) => _value;
+
+            public IDisposable OnChange(Action<TOptions, string> listener) => NullDisposable.Instance;
+
+            private sealed class NullDisposable : IDisposable
+            {
+                public static readonly NullDisposable Instance = new NullDisposable();
+                public void Dispose() { }
+            }
         }
     }
 }

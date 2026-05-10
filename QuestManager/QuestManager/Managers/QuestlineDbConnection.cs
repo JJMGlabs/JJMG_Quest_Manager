@@ -16,37 +16,56 @@ namespace QuestManager.Managers
 {
     public class QuestlineDbConnection : IQuestlineDbConnection, IQuestlineQuestRelationshipConnection
     {
-        private readonly string fullPath;
         private readonly IQuestDbConnection _questDbConnection;
+        private readonly IOptionsMonitor<QuestLineDbConnectionOptions> _optionsMonitor;
         private List<QuestlineMetadata> _questlines;
-        QuestLineDbConnectionOptions _options;
         FileBasedDbConnectionUtility _db;
 
-        public QuestlineDbConnection(IOptions<QuestLineDbConnectionOptions> dbConnectionOptions, IQuestDbConnection questDbConnection)
+        private QuestLineDbConnectionOptions CurrentOptions => _optionsMonitor.CurrentValue;
+
+        private string CurrentFullPath
         {
-            _options = dbConnectionOptions.Value;
+            get
+            {
+                var options = CurrentOptions;
+                if (string.IsNullOrEmpty(options.BasePath))
+                    options.BasePath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.Create);
 
-            //if we dont have a json file location we use app settings
-            if (string.IsNullOrEmpty(_options.BasePath))
-                _options.BasePath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.Create);
+                return options.BasePath + options.DbName + options.CollectionName;
+            }
+        }
 
-            fullPath = _options.BasePath + _options.DbName + _options.CollectionName;
+        public QuestlineDbConnection(IOptionsMonitor<QuestLineDbConnectionOptions> dbConnectionOptions, IQuestDbConnection questDbConnection)
+        {
+            _optionsMonitor = dbConnectionOptions;
+            _optionsMonitor.OnChange(_ => ClearCachedQuestlines());
+
             _db = new FileBasedDbConnectionUtility(Constants.UtilityValues.WaitHandleForQuestLineDb);
             _questDbConnection = questDbConnection;
+        }
+
+        private QuestlineDbConnection(IOptions<QuestLineDbConnectionOptions> dbConnectionOptions, IQuestDbConnection questDbConnection)
+            : this(new StaticOptionsMonitor<QuestLineDbConnectionOptions>(dbConnectionOptions.Value), questDbConnection)
+        {
+        }
+
+        private void ClearCachedQuestlines()
+        {
+            _questlines = null;
         }
 
         public ResponseStatus SaveDbChanges()
         {
             SaveDbBackup();
 
-            _db.WriteListDataToFile(fullPath, GetQuestlines(), _options.RootObject);
+            _db.WriteListDataToFile(CurrentFullPath, GetQuestlines(), CurrentOptions.RootObject);
 
             return new ResponseStatus(true, "Successfully wrote quest data to data store");
         }
 
         public ResponseStatus SaveDbBackup()
         {
-            _db.BackupDB(fullPath, _options.RootObject);
+            _db.BackupDB(CurrentFullPath, CurrentOptions.RootObject);
 
             return new ResponseStatus(true, "Successfully backed up quest data");
         }
@@ -56,7 +75,7 @@ namespace QuestManager.Managers
             if (_questlines == null)
             {
                 List<QuestlineMetadata> questLines = new List<QuestlineMetadata>();
-                questLines = _db.GetListOfDataFromFile<QuestlineMetadata>(fullPath, _options.RootObject);
+                questLines = _db.GetListOfDataFromFile<QuestlineMetadata>(CurrentFullPath, CurrentOptions.RootObject);
                 _questlines = questLines != null ? questLines : new List<QuestlineMetadata>();
             }
 
@@ -167,6 +186,28 @@ namespace QuestManager.Managers
                 }
             }
             return orderedQuestlinePaths;
+        }
+
+        private sealed class StaticOptionsMonitor<TOptions> : IOptionsMonitor<TOptions> where TOptions : class, new()
+        {
+            private readonly TOptions _value;
+
+            public StaticOptionsMonitor(TOptions value)
+            {
+                _value = value;
+            }
+
+            public TOptions CurrentValue => _value;
+
+            public TOptions Get(string name) => _value;
+
+            public IDisposable OnChange(Action<TOptions, string> listener) => NullDisposable.Instance;
+
+            private sealed class NullDisposable : IDisposable
+            {
+                public static readonly NullDisposable Instance = new NullDisposable();
+                public void Dispose() { }
+            }
         }
     }
 }

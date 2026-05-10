@@ -29,18 +29,7 @@ namespace SharedLibrary.Data.Configuration
 
         public void Update(Action<T> applyChanges)
         {
-            var filePath = "";
-            if (_environment != null)
-            {
-                var fileProvider = _environment.ContentRootFileProvider;
-                var fileInfo = fileProvider.GetFileInfo(_file);
-                filePath = fileInfo.PhysicalPath;
-            }
-            else
-            {            
-                string startupPath = AppDomain.CurrentDomain.BaseDirectory;
-                filePath = Path.Combine(startupPath, _file);
-            }
+            var filePath = ResolveSettingsPath();
 
             var jObject = JsonConvert.DeserializeObject<JObject>(File.ReadAllText(filePath));
             var sectionObject = jObject.TryGetValue(_section, out JToken section) ?
@@ -50,6 +39,31 @@ namespace SharedLibrary.Data.Configuration
 
             jObject[_section] = JObject.Parse(JsonConvert.SerializeObject(sectionObject));
             File.WriteAllText(filePath, JsonConvert.SerializeObject(jObject, Formatting.Indented));
+        }
+
+        private string ResolveSettingsPath()
+        {
+            if (_environment != null)
+            {
+                var fileProvider = _environment.ContentRootFileProvider;
+                var fileInfo = fileProvider.GetFileInfo(_file);
+                if (fileInfo.Exists)
+                    return fileInfo.PhysicalPath;
+            }
+
+            string startupPath = AppDomain.CurrentDomain.BaseDirectory;
+            var filePath = Path.Combine(startupPath, _file);
+            if (File.Exists(filePath))
+                return filePath;
+
+            var fallbackPath = Path.Combine(startupPath, "appsettings.json");
+            if (!string.Equals(_file, "appsettings.json", StringComparison.OrdinalIgnoreCase)
+                && File.Exists(fallbackPath))
+            {
+                return fallbackPath;
+            }
+
+            return filePath;
         }
     }
 }
