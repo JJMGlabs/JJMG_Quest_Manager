@@ -22,6 +22,9 @@ namespace QuestManagerSharedResources.QuestSubObjects
         //Has the quest been accepted by the app
         public bool Accepted { get; set; }
         public bool RepeatOutcome { get; set; }
+        /// <summary>
+        /// Returns true if this outcome carries a questline ID in its DeliveryMetadata.
+        /// </summary>
         public bool isQuestlineOutcome()
         {
             if (DeliveryMetadata == null || DeliveryMetadata.Count == 0)
@@ -33,10 +36,16 @@ namespace QuestManagerSharedResources.QuestSubObjects
             return false;
         }
 
-        public string GetQuestlineId() => 
+        /// <summary>
+        /// Returns the questline ID from DeliveryMetadata, or null if not set.
+        /// </summary>
+        public string GetQuestlineId() =>
             DeliveryMetadata.ContainsKey(Constants.ReservedMeasurementKeys.QuestlineIdKey) ? 
             DeliveryMetadata[Constants.ReservedMeasurementKeys.QuestlineIdKey] : null;
     
+        /// <summary>
+        /// Returns the quest ID from DeliveryMetadata, or an empty string if not set.
+        /// </summary>
         public string GetQuestIdFromOutcome()
         {
             if (DeliveryMetadata == null || DeliveryMetadata.Count == 0)

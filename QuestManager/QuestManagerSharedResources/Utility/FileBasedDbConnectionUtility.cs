@@ -7,8 +7,8 @@ using System.Threading;
 namespace QuestManagerSharedResources.Utility
 {
     /// <summary>
-    /// Utility to facilitate the interaction with a file containing text delimited or otherwise file 
-    /// This class should alway be a singleton
+    /// Reads and writes JSON data to a file, with optional delimiter-based embedding for storing multiple datasets in one file.
+    /// Uses a named EventWaitHandle to coordinate file access across processes.
     /// </summary>
     public class FileBasedDbConnectionUtility
     {
@@ -19,6 +19,9 @@ namespace QuestManagerSharedResources.Utility
             _waitHandle = new EventWaitHandle(true, EventResetMode.AutoReset, handleName);
         }
 
+        /// <summary>
+        /// Reads and deserializes a list of objects from a JSON file. If a delimiter is provided, only the delimited section is read.
+        /// </summary>
         public List<T> GetListOfDataFromFile<T>(string filePath, string delimiter = null)
         {
             List<T> result = new List<T>();
@@ -58,12 +61,8 @@ namespace QuestManagerSharedResources.Utility
 
 
         /// <summary>
-        /// Writes data to a file, if the delimiter is not provided the entire file is overwritten
+        /// Serializes and writes a list of objects to a JSON file. If a delimiter is provided, only the delimited section is replaced; otherwise the entire file is overwritten.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="filePath"></param>
-        /// <param name="data"></param>
-        /// <param name="delimiter"></param>
         public void WriteListDataToFile<T>(string filePath, List<T> data, string delimiter = null)
         {
             _waitHandle.WaitOne();
@@ -108,6 +107,9 @@ namespace QuestManagerSharedResources.Utility
             }
         }
 
+        /// <summary>
+        /// Creates a backup of the current file data before a write. Copies to a `.Old.json` file, or updates a delimited backup section if a delimiter is provided.
+        /// </summary>
         public void BackupDB(string filePath, string delimiter)
         {
             _waitHandle.WaitOne();

@@ -1,5 +1,8 @@
-﻿namespace QuestManager.Configuration
+namespace QuestManager.Configuration
 {
+    /// <summary>
+    /// Configuration settings for a database connection. Supports both file-based JSON storage and the potential for server-based storage depending on the implementation.
+    /// </summary>
     public class DbConnectionOptions
     {
         //In a file this is the path to the folder, for a server it is hosting location

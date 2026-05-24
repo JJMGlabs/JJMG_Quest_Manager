@@ -5,10 +5,9 @@ using System.Collections.Generic;
 namespace QuestManagerSharedResources.QuestSubObjects
 {
     /// <summary>
-    //A Prerequisite is something that is needed to make a quest available to a user
-    //Remember when setting Prerequisites, all need to be met or canceled to Unlock the quest    
-    //Prerequisite are updated by the game loop
-    /// <summary>
+    /// A prerequisite is something needed to make a quest available. All prerequisites on a quest must be met or cancelled to unlock it.
+    /// Prerequisites are updated by the game loop.
+    /// </summary>
     public class QuestPrerequisite : SubObjectMeasurable
     {
         public bool isPrerequisiteMet { get; set; }
