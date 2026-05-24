@@ -41,10 +41,10 @@ namespace QuestManagerSharedResources.Model.Utility
         /// </summary>
         public static bool PerformComparison(string valueToCompare, SubObjectComparator comparitor, string targetValue)
         {
-            if (float.TryParse(targetValue, out float floatValue))
-                return Compare(float.Parse(valueToCompare), comparitor, floatValue);
-            if (DateTime.TryParse(targetValue, out DateTime datetimeValue))
-                return Compare(DateTime.Parse(targetValue), comparitor, datetimeValue);
+            if (float.TryParse(valueToCompare, out float floatValueToCompare) && float.TryParse(targetValue, out float floatTargetValue))
+                return Compare(floatValueToCompare, comparitor, floatTargetValue);
+            if (DateTime.TryParse(valueToCompare, out DateTime dateValueToCompare) && DateTime.TryParse(targetValue, out DateTime dateTargetValue))
+                return Compare(dateValueToCompare, comparitor, dateTargetValue);
 
             return Compare(valueToCompare, comparitor, targetValue);
         }
