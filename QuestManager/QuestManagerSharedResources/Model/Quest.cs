@@ -58,6 +58,9 @@ namespace QuestManagerSharedResources.Model
             this.repeats = repeats;
         }
 
+        /// <summary>
+        /// Overwrites quest data with the provided data while keeping the same ID.
+        /// </summary>
         public void OverwriteData(Quest overwriteData)
         {
             Name = overwriteData.Name;
@@ -70,6 +73,9 @@ namespace QuestManagerSharedResources.Model
             _questPrerequisites = overwriteData.QuestPrerequisites;
         }
 
+        /// <summary>
+        /// Assigns unique identifiers to all SubObjects that do not already have one.
+        /// </summary>
         public void SetQuestSubObjectIds<T>(List<T> questSubObjects, string idPrefix) where T : QuestSubObject
         {
             foreach (var item in questSubObjects)
@@ -79,6 +85,9 @@ namespace QuestManagerSharedResources.Model
             }
         }
 
+        /// <summary>
+        /// Saves the current quest state to the repeats history, resets measurements, and returns the quest to CURRENT for a new run.
+        /// </summary>
         public void BeginRepeat()
         {
             if (!Repeatable && State != QuestState.COMPLETE)
@@ -109,11 +118,17 @@ namespace QuestManagerSharedResources.Model
             this.State = QuestState.CURRENT;
         }
 
+        /// <summary>
+        /// Retrieves all previous run records for this quest. Each entry is a full copy of the quest at the time it was repeated.
+        /// </summary>
         public List<Quest> GetRepeatData()
         {
             return repeats;
         }
 
+        /// <summary>
+        /// Marks all unaccepted outcomes on a completed quest as accepted and returns them. Accepted outcomes are not returned again.
+        /// </summary>
         public List<QuestOutcome> AcceptQuestOutcomes()
         {
             if(State != QuestState.COMPLETE)
@@ -127,6 +142,9 @@ namespace QuestManagerSharedResources.Model
             return outputOutcomes;
         }
 
+        /// <summary>
+        /// Applies updated quest data from the database while preserving player-side progression on any unchanged SubObjects.
+        /// </summary>
         public void OverwriteNonClientModifiedData(Quest overwriteData)
         {
             Name = overwriteData.Name;
@@ -151,6 +169,9 @@ namespace QuestManagerSharedResources.Model
             return overwriteSubObjects;
         }
 
+        /// <summary>
+        /// Adds a SubObject of type measurement, outcome, or prerequisite to the quest and assigns it an ID.
+        /// </summary>
         public void AddSubObject<T>(T subObject) where T : QuestSubObject
         {
             List<T> subObjectList = GetSubObjectList<T>();
@@ -165,6 +186,9 @@ namespace QuestManagerSharedResources.Model
             subObjectList.Add(subObject);
         }
 
+        /// <summary>
+        /// Finds a SubObject by ID and replaces it. Returns true if the replacement was made.
+        /// </summary>
         public bool FindAndReplaceSubObject<T>(T subObject) where T : QuestSubObject
         {
             List<T> subObjectList = GetSubObjectList<T>();
@@ -180,6 +204,9 @@ namespace QuestManagerSharedResources.Model
             return true;
         }
 
+        /// <summary>
+        /// Removes a SubObject from the quest by ID. Returns true if it was found and removed.
+        /// </summary>
         public bool RemoveSubObject<T>(string subObjectId) where T : QuestSubObject
         {
             if (string.IsNullOrEmpty(subObjectId))

@@ -1,5 +1,8 @@
-﻿namespace QuestManagerSharedResources.Model.Utility
+namespace QuestManagerSharedResources.Model.Utility
 {
+    /// <summary>
+    /// The result of a write operation, indicating success or failure and providing a message.
+    /// </summary>
     public class ResponseStatus
     {
         public bool IsSuccess { get; private set; }
