@@ -2,9 +2,11 @@
 
 	<PropertyGroup>
 		<OutputType>WinExe</OutputType>
-		<TargetFramework>net6.0-windows</TargetFramework>
+		<TargetFramework>net10.0-windows10.0.19041</TargetFramework>
 		<Nullable>enable</Nullable>
 		<UseWPF>true</UseWPF>
+		<SupportedOSPlatformVersion>10.0.19041</SupportedOSPlatformVersion>
+		<TargetPlatformVersion>10.0.19041</TargetPlatformVersion>
 	</PropertyGroup>
 
 	<PropertyGroup>
@@ -12,7 +14,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.AspNetCore.Components.WebView.Wpf" Version="6.0.486" />
+	<PackageReference Include="Microsoft.AspNetCore.Components.WebView.Wpf" Version="10.0.71" />
 	</ItemGroup>
 
 	<ItemGroup>
