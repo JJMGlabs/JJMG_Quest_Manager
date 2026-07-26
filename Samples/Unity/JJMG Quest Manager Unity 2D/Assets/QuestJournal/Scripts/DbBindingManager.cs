@@ -238,8 +238,11 @@ public class DbBindingManager : MonoBehaviour
         }
         targetList.style.display = DisplayStyle.Flex;
 
-        // Always set itemsSource first to ensure bind callbacks observe the current source
-        targetList.itemsSource = bindvalue;
+        var headerList = new List<object>();
+        headerList.Add(null);
+        foreach (var item in bindvalue)
+            headerList.Add(item);
+        targetList.itemsSource = headerList;
 
         Action<VisualElement, int> bindItem = null;
 
@@ -262,52 +265,88 @@ public class DbBindingManager : MonoBehaviour
             return;
 
         targetList.bindItem = bindItem;
-        targetList.selectionChanged -= Debug.Log;  // Prevent multiple subscriptions
+        targetList.selectionChanged -= Debug.Log;
         targetList.selectionChanged += Debug.Log;
+    }
+
+    private bool IsHeaderRow(int i) => i == 0;
+
+    private void BindHeaderRow(VisualElement e)
+    {
+        var headerRow = e.Q<VisualElement>("HeaderRow");
+        var dataRow = e.Q<VisualElement>("DataRow");
+
+        if (headerRow != null)
+        {
+            headerRow.style.display = DisplayStyle.Flex;
+            headerRow.pickingMode = PickingMode.Ignore;
+        }
+        if (dataRow != null) dataRow.style.display = DisplayStyle.None;
+    }
+
+    private void BindDataRow(VisualElement e)
+    {
+        var headerRow = e.Q<VisualElement>("HeaderRow");
+        var dataRow = e.Q<VisualElement>("DataRow");
+
+        if (headerRow != null) headerRow.style.display = DisplayStyle.None;
+        if (dataRow != null) dataRow.style.display = DisplayStyle.Flex;
     }
 
     private void BindMeasurementItem(VisualElement e, int i, ListView listView)
     {
+        if (IsHeaderRow(i)) { BindHeaderRow(e); return; }
+        BindDataRow(e);
+
         var src = listView.itemsSource as System.Collections.IList;
         if (src == null || i < 0 || i >= src.Count) return;
         var item = src[i] as QuestMeasurement;
         if (item == null) return;
+
         e.Q<Label>("MeasureName").text = item.Name;
         e.Q<Label>("MeasureState").text = item.MeasurementReached ? "Completed" : "InProgress";
-        e.Q<Label>("MeasureValue").text = "Measuring: " + item.Measurement;
+        e.Q<Label>("MeasureValue").text = !string.IsNullOrEmpty(item.Measurement) ? "Measuring: " + item.Measurement : "_";
         e.Q<Label>("MeasureProgress").text = "Progress: " + item.ProgressValue;
         e.Q<Label>("MeasureTarget").text = "Target: " + item.TargetValue;
     }
 
     private void BindOutcomeItem(VisualElement e, int i, ListView listView)
     {
+        if (IsHeaderRow(i)) { BindHeaderRow(e); return; }
+        BindDataRow(e);
+
         var src = listView.itemsSource as System.Collections.IList;
         if (src == null || i < 0 || i >= src.Count) return;
         var item = src[i] as QuestOutcome;
         if (item == null) return;
+
         e.Q<Label>("OutcomeName").text = item.Name;
-        e.Q<Label>("Accepted").text = item.Accepted ? "Accepted" : "Available";
-        e.Q<Label>("Repeats").text = item.RepeatOutcome ? "Repeating" : "";
-        string measurementIds = (item.MeasurementDependancyIds != null && item.MeasurementDependancyIds.Count > 0)
-            ? "Measuring: " + string.Join(", ", item.MeasurementDependancyIds)
-            : "";
-        e.Q<Label>("MeasurementDependancies").text = measurementIds;
+        e.Q<Label>("Accepted").text = item.Accepted ? "Processed Outcome" : "_";
+        e.Q<Label>("Repeats").text = item.RepeatOutcome ? "Repeating" : "_";
+        string dependencyIds = (item.MeasurementDependancyIds != null && item.MeasurementDependancyIds.Count > 0)
+            ? "Depends on: " + string.Join(", ", item.MeasurementDependancyIds)
+            : "_";
+        e.Q<Label>("OutcomeDependencies").text = dependencyIds;
     }
 
     private void BindPrerequisiteItem(VisualElement e, int i, ListView listView)
     {
+        if (IsHeaderRow(i)) { BindHeaderRow(e); return; }
+        BindDataRow(e);
+
         var src = listView.itemsSource as System.Collections.IList;
         if (src == null || i < 0 || i >= src.Count) return;
         var item = src[i] as QuestPrerequisite;
         if (item == null) return;
+
         e.Q<Label>("Name").text = item.Name;
         var Status = "Prerequisite has ";
-        Status += item.isPrerequisiteMet ? "been met" : "is not met";
+        Status += item.isPrerequisiteMet ? "prerequisite met" : "_";
         Status += item.isPrerequisiteCanceled ? " but is canceled" : "";
         e.Q<Label>("Status").text = Status;
-        e.Q<Label>("MeasureValue").text = "Measuring: " + item.Measurement;
-        e.Q<Label>("MeasureProgress").text = "Progress: " + item.ProgressValue;
-        e.Q<Label>("MeasureTarget").text = "Target: " + item.TargetValue;
+        e.Q<Label>("PrerequisiteValue").text = !string.IsNullOrEmpty(item.Measurement) ? "Measuring: " + item.Measurement : "_";
+        e.Q<Label>("PrerequisiteProgress").text = "Progress: " + item.ProgressValue;
+        e.Q<Label>("PrerequisiteTarget").text = "Target: " + item.TargetValue;
     }
 
     private void OnHeaderPointerDown(PointerDownEvent evt)

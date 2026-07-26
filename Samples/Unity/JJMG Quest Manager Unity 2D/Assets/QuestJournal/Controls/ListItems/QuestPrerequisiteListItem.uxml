@@ -2,21 +2,26 @@
     <ui:Style>
 
     </ui:Style>
-    <ui:VisualElement class="subObjectLstItmRow">
+    <ui:VisualElement name="HeaderRow" class="subObjectLstItmRow subObjectHeaderRow">
+        <ui:VisualElement class="leftColumn">
+            <ui:Label tabindex="-1" name="HeaderName" text="Name" parse-escape-sequences="true" display-tooltip-when-elided="true" class="subObjectHeaderLabel" />
+        </ui:VisualElement>
+        <ui:VisualElement class="rightColumn rightInnerColumn">
+            <ui:Label tabindex="-1" name="HeaderStatus" text="Status" parse-escape-sequences="true" display-tooltip-when-elided="true" class="subObjectHeaderLabel" />
+            <ui:Label tabindex="-1" name="HeaderValue" text="Value" parse-escape-sequences="true" display-tooltip-when-elided="true" class="subObjectHeaderLabel" />
+            <ui:Label tabindex="-1" name="HeaderProgress" text="Progress" parse-escape-sequences="true" display-tooltip-when-elided="true" class="subObjectHeaderLabel" />
+            <ui:Label tabindex="-1" name="HeaderTarget" text="Target" parse-escape-sequences="true" display-tooltip-when-elided="true" class="subObjectHeaderLabel" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+    <ui:VisualElement name="DataRow" class="subObjectLstItmRow">
         <ui:VisualElement class="leftColumn">
             <ui:Label tabindex="-1" name="Name" parse-escape-sequences="true" display-tooltip-when-elided="true" />
         </ui:VisualElement>
-        <ui:VisualElement class="rightColumn">
-            <ui:Label tabindex="-1" name="Status" parse-escape-sequences="true" display-tooltip-when-elided="true" />
-        </ui:VisualElement>
-    </ui:VisualElement>
-    <ui:VisualElement class="subObjectLstItmRow">
-        <ui:VisualElement class="leftColumn">
-            <ui:Label tabindex="-1" name="MeasureValue" parse-escape-sequences="true" display-tooltip-when-elided="true" />
-        </ui:VisualElement>
         <ui:VisualElement class="rightColumn rightInnerColumn">
-            <ui:Label tabindex="-1" name="MeasureProgress" parse-escape-sequences="true" display-tooltip-when-elided="true" />
-            <ui:Label tabindex="-1" name="MeasureTarget" parse-escape-sequences="true" display-tooltip-when-elided="true" />
+            <ui:Label tabindex="-1" name="Status" parse-escape-sequences="true" display-tooltip-when-elided="true" />
+            <ui:Label tabindex="-1" name="PrerequisiteValue" parse-escape-sequences="true" display-tooltip-when-elided="true" />
+            <ui:Label tabindex="-1" name="PrerequisiteProgress" parse-escape-sequences="true" display-tooltip-when-elided="true" />
+            <ui:Label tabindex="-1" name="PrerequisiteTarget" parse-escape-sequences="true" display-tooltip-when-elided="true" />
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

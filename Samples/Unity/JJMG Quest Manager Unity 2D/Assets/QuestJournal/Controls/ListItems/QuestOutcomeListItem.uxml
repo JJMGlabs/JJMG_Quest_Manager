@@ -2,18 +2,24 @@
     <ui:Style>
 
     </ui:Style>
-    <ui:VisualElement class="subObjectLstItmRow">
+    <ui:VisualElement name="HeaderRow" class="subObjectLstItmRow subObjectHeaderRow">
+        <ui:VisualElement class="leftColumn">
+            <ui:Label tabindex="-1" name="HeaderName" text="Name" parse-escape-sequences="true" display-tooltip-when-elided="true" class="subObjectHeaderLabel" />
+        </ui:VisualElement>
+        <ui:VisualElement class="rightColumn rightInnerColumn">
+            <ui:Label tabindex="-1" name="HeaderStatus" text="Status" parse-escape-sequences="true" display-tooltip-when-elided="true" class="subObjectHeaderLabel" />
+            <ui:Label tabindex="-1" name="HeaderRepeats" text="Repeats" parse-escape-sequences="true" display-tooltip-when-elided="true" class="subObjectHeaderLabel" />
+            <ui:Label tabindex="-1" name="HeaderDependencies" text="Dependencies" parse-escape-sequences="true" display-tooltip-when-elided="true" class="subObjectHeaderLabel" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+    <ui:VisualElement name="DataRow" class="subObjectLstItmRow">
         <ui:VisualElement class="leftColumn">
             <ui:Label tabindex="-1" name="OutcomeName" parse-escape-sequences="true" display-tooltip-when-elided="true" />
         </ui:VisualElement>
         <ui:VisualElement class="rightColumn rightInnerColumn">
             <ui:Label tabindex="-1" name="Accepted" parse-escape-sequences="true" display-tooltip-when-elided="true" />
             <ui:Label tabindex="-1" name="Repeats" parse-escape-sequences="true" display-tooltip-when-elided="true" />
-        </ui:VisualElement>
-    </ui:VisualElement>
-    <ui:VisualElement class="subObjectLstItmRow">
-        <ui:VisualElement class="leftColumn">
-            <ui:Label tabindex="-1" name="MeasurementDependancies" parse-escape-sequences="true" display-tooltip-when-elided="true" />
+            <ui:Label tabindex="-1" name="OutcomeDependencies" parse-escape-sequences="true" display-tooltip-when-elided="true" />
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>
